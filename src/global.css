@@ -1,9 +1,17 @@
+@font-face {
+  font-family: "BoutiqueBitmap";
+  /* font-weight: 600; */
+  src: url("/fonts/BoutiqueBitmap9x9.ttf");
+}
+
+
 body {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  font-family: 'BoutiqueBitmap', sans-serif;
 }
 
 a {

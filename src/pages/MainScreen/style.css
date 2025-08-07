@@ -7,10 +7,19 @@
 }
 .top {}
 .center {
+  display: flex;
   height: calc(100vh - 100px);
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.center .side {
+  width: 300px;
+  height: 100%;
+}
+.center .main {
+  flex: 1;
+  height: 100%;
 }
 .bottom {
   height: 100px;

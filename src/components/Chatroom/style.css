@@ -1,0 +1,44 @@
+.chatroom {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* background-color: red; */
+}
+
+.chatroom iframe {
+  position: absolute;
+  border: 0;
+  width: 100%;
+  height: 100%;
+}
+.chatroom iframe body {
+  background: red !important;
+}
+.chatroom iframe .chat_line {
+  font-family: 'BoutiqueBitmap', sans-serif !important;
+
+  /* font-family: "Keep Calm" !important; */
+}
+
+#chat-message {
+  font-family: 'BoutiqueBitmap', sans-serif !important;
+}
+.chat_line {
+  font-size: 20px;
+}
+
+/* Change the font size of the entire chat */
+.chat_line {
+    font-size: 20px;
+}
+
+/* Make the user nicknames bold and a different color */
+.nick {
+    font-weight: bold;
+    color: #4CAF50; /* A shade of green */
+}
+
+/* Change the message text color */
+.message {
+    color: #FFFFFF; /* White */
+}
