@@ -18,6 +18,9 @@ function VoiceInputer({ style }: { style?: React.CSSProperties }) {
       onSilence: () => {
         wrapperRef.current!.style.opacity = '0';
       },
+      onSentenceEnd: (sentence) => {
+        console.log('VoiceInputer: Sentence end:', sentence);
+      },
       onInput: (transcript) => {
         console.log('VoiceInputer: Recognition result:', transcript);
         dialogElemRef.current!.textContent = transcript;
@@ -29,7 +32,9 @@ function VoiceInputer({ style }: { style?: React.CSSProperties }) {
   return (
     <div>
       <button onClick={() => voiceInputRef.current?.start()}>Start</button>
-      <button onClick={() => voiceInputRef.current?.stop()}>Stop</button>
+      <button onClick={() => voiceInputRef.current?.reset()}>Reset</button>
+      <button onClick={() => voiceInputRef.current?.switch('zh-TW')}>ZH</button>
+      <button onClick={() => voiceInputRef.current?.switch('en')}>EN</button>
       <div ref={wrapperRef}>
         <div style={style} ref={dialogElemRef}></div>
       </div>
