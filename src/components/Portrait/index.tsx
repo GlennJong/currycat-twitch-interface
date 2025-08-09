@@ -1,39 +1,33 @@
-import { useEffect, useRef } from 'react';
-import { VoiceInputUtility } from './voice-inputer';
+import { useRef, forwardRef, useImperativeHandle } from "react";
 
-function Portrait({ style }: { style?: React.CSSProperties }) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const dialogElemRef = useRef<HTMLDivElement>(null);
-  const voiceInputRef = useRef<ReturnType<typeof VoiceInputUtility>>(null);
-  
-  useEffect(() => {
-    voiceInputRef.current = VoiceInputUtility({
-      onStart: () => {
-        wrapperRef.current!.style.opacity = '1';
-        console.log('VoiceInputer: Recognition started.');
-      },
-      onError: (event) => {
-        console.error('VoiceInputer: Recognition error:', event.error);
-      },
-      onSilence: () => {
-        wrapperRef.current!.style.opacity = '0';
-      },
-      onSentenceEnd: (sentence) => {
-        console.log('VoiceInputer: Sentence end:', sentence);
-      },
-      onInput: (transcript) => {
-        console.log('VoiceInputer: Recognition result:', transcript);
-        dialogElemRef.current!.textContent = transcript;
-      },
-      interruption: 600
-    });
-  }, []);
-  
+const Portrait = forwardRef(function Portrait({ style }: { style?: React.CSSProperties }, ref) {
+  const photoRef = useRef<HTMLImageElement>(null);
+
+  const handleSwitchPhoto = (type: string, id: string) => {
+    if (photoRef.current) {
+      photoRef.current.src = `./assets/portrait_${type}_${id}.svg`;
+    }
+  };
+
+  const handleResetPhoto = () => {
+    if (photoRef.current) {
+      photoRef.current.src = `./assets/portrait_a_0.svg`;
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    switch: handleSwitchPhoto,
+    reset: handleResetPhoto,
+  }));
+
   return (
-    <div>
-      <img style={{ display: 'block', width: '100%', height: '100%', ...style }} src="./assets/portrait_a_1.svg" alt="" />
-    </div>
+    <img
+      ref={photoRef}
+      style={{ display: 'block', width: '100%', height: '100%', ...style }}
+      src="./assets/portrait_a_1.svg"
+      alt=""
+    />
   );
-}
+});
 
 export default Portrait;

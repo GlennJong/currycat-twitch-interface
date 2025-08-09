@@ -59,9 +59,7 @@ function Chatroom() {
         <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{
             marginBottom: '12px',
-            color: '#fff',
             fontSize: '12px',
-            opacity: .5
           }}>
             Before connect to your TWITCH APP, please fill <b>client_id</b> and <b>redirect_uri</b> in .env file.
           </div>

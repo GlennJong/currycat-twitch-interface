@@ -9,6 +9,7 @@ import FreeWindow from '../../components/FreeWindow/index';
 import Window from '@/components/Window';
 import Checkbox from '../../components/Checkbox/index';
 import { Color } from '@/constants';
+import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
@@ -46,7 +47,7 @@ function MainScreen() {
 
         </div>
         <div className="bottom">
-          <div style={{ color: Color.Light }}>
+          <div style={{ padding: '12px 24px', color: Color.Light }}>
             <div>
               <Checkbox
                 theme="light"
@@ -83,6 +84,10 @@ function MainScreen() {
         }
         <FreeWindow id="portrait" position={{ x: 400, y: 400 }}>
           <Portrait />
+        </FreeWindow>
+
+        <FreeWindow id="dialogue" position={{ x: 400, y: 400 }}>
+          <Dialogue />
         </FreeWindow>
       </div>
     </>

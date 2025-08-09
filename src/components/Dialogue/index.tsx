@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { VoiceInputUtility } from './voice-inputer';
 
-function Portrait({ style }: { style?: React.CSSProperties }) {
+function Dialogue({ style }: { style?: React.CSSProperties }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dialogElemRef = useRef<HTMLDivElement>(null);
   const voiceInputRef = useRef<ReturnType<typeof VoiceInputUtility>>(null);
@@ -42,4 +42,4 @@ function Portrait({ style }: { style?: React.CSSProperties }) {
   );
 }
 
-export default Portrait;
+export default Dialogue;
