@@ -80,6 +80,17 @@ export function VoiceInputUtility(params: VoiceInputUtilityParams = {}) {
     recognition.stop()
   }
 
+  const destroy = () => {
+    transcriptBuffer = ''
+    lastSentence = ''
+    clearTimers()
+    recognition.onstart = null
+    recognition.onend = null
+    recognition.onerror = null
+    recognition.onresult = null
+    recognition.stop()
+  }
+
   recognition.onstart = () => {
     isRecognizing = true
     onStart?.()
@@ -94,7 +105,7 @@ export function VoiceInputUtility(params: VoiceInputUtilityParams = {}) {
     }, 200)
   }
 
-  recognition.onerror = (event) => {
+  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
     onError?.(event)
     // 錯誤時自動重啟
     setTimeout(() => {
@@ -125,7 +136,6 @@ export function VoiceInputUtility(params: VoiceInputUtilityParams = {}) {
 
   return {
     start,
-    stop,
     switch: (lang: string) => {
       if (typeof lang === 'string' && lang !== recognition.lang) {
         recognition.lang = lang
@@ -136,5 +146,6 @@ export function VoiceInputUtility(params: VoiceInputUtilityParams = {}) {
         }, 100)
       }
     },
+    destroy, // 將 reset 改為 destroy
   }
 }

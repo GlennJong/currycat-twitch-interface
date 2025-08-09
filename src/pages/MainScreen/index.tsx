@@ -4,7 +4,7 @@ import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Ball } from "./RollingBall";
-import Portrait from '../../components/Portrait';
+import Portrait, { PortraitRef } from '../../components/Portrait';
 import FreeWindow from '../../components/FreeWindow/index';
 import Window from '@/components/Window';
 import Checkbox from '../../components/Checkbox/index';
@@ -13,6 +13,10 @@ import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
+  const [ isDialogueOpen, setIsDialogueOpen ] = useState(false);
+  const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(false);
+  const [ isDialogueShow, setIsDialogueShow ] = useState(false);
+  const portraitRef = useRef<PortraitRef>(null);
   const ballRef = useRef<Ball>(null);
 
   // useEffect(() => {
@@ -59,10 +63,18 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
-                checked={isTodoListOpen}
+                checked={isDialogueOpen}
                 label="DIALOGUE"
-                onChange={(checked) => setIsTodoListOpen(checked)}
+                onChange={(checked) => setIsDialogueOpen(checked)}
               />
+              { isDialogueOpen &&
+                <Checkbox
+                  theme="light"
+                  checked={isDialogueForceHide}
+                  label="DIALOGUE HIDE"
+                  onChange={(checked) => setIsDialogueForceHide(checked)}
+                />
+              }
             </div>
             <div>
               <Checkbox
@@ -73,9 +85,6 @@ function MainScreen() {
               />
             </div>
           </div>
-          {/* <FreeWindow id="test" position={{ x: 400, y: 400 }}>
-            <Portrait />
-          </FreeWindow> */}
         </div>
         { isTodoListOpen &&
           <FreeWindow id="todolist" position={{ x: 400, y: 400 }}>
@@ -83,12 +92,34 @@ function MainScreen() {
           </FreeWindow>
         }
         <FreeWindow id="portrait" position={{ x: 400, y: 400 }}>
-          <Portrait />
+          <Portrait ref={portraitRef} />
         </FreeWindow>
 
-        <FreeWindow id="dialogue" position={{ x: 400, y: 400 }}>
-          <Dialogue />
-        </FreeWindow>
+        { isDialogueOpen &&
+          <FreeWindow
+            id="dialogue"
+            style={{ display: (isDialogueForceHide || !isDialogueShow) ? 'none' : 'block' }}
+            position={{ x: 400, y: 400 }}
+          >
+            <Dialogue
+              style={{ padding: '12px', fontSize: '30px' }}
+              onInput={(content) => {
+                if (!isDialogueShow) setIsDialogueShow(true);
+                const list = ['崩潰', '煩', '好累'];
+                if (list.some((word) => content.includes(word))) {
+                  portraitRef.current?.switch('b');
+                }
+                else {
+                  portraitRef.current?.switch();
+                }
+              }}
+              onSilence={() => {
+                portraitRef.current?.reset();
+                setIsDialogueShow(false);
+              }}
+            />
+          </FreeWindow>
+        }
       </div>
     </>
   );

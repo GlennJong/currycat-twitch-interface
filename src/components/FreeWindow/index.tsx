@@ -7,12 +7,14 @@ const FreeWindow = ({
   id,
   children,
   position: initialPosition = { x: 100, y: 100 },
+  style,
   minWidth = 150,
   minHeight = 100,
 }: {
   id: string;
   children: ReactNode;
   position?: { x: number; y: number };
+  style?: React.CSSProperties;
   minWidth?: number;
   minHeight?: number;
 }) => {
@@ -88,6 +90,7 @@ const FreeWindow = ({
         borderImage: `url(${frame})`,
         borderImageSlice: '49% 49% fill',
         borderImageWidth: '32px',
+        ...style
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

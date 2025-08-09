@@ -6,10 +6,10 @@ import { Color } from '@/constants';
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
 
 const Timer: React.FC = () => {
-  // 計算當前時間 + 1 小時，並格式化為 hh:mm
+  // 計算當前時間 + 1 小時，並格式化為 hh:mm，考慮時區偏移 (+8)
   const getDefaultInputTime = () => {
     const now = new Date();
-    now.setHours(now.getHours() + 1);
+    now.setUTCHours(now.getUTCHours() + 8 + 1); // UTC 時間加 8 小時再加 1 小時
     return now.toISOString().slice(11, 16); // 提取 hh:mm 格式
   };
 
@@ -36,15 +36,23 @@ const Timer: React.FC = () => {
     }
   }, [remaining]);
 
-  // 開始倒數，計算距離指定時間的秒數
+  // 開始倒數，計算距離指定時間的秒數，考慮時區偏移 (+8)
   const startTimer = () => {
     const now = new Date();
     const [h, m] = inputTime.split(':').map(Number);
-    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+    const target = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      h - 8, // 減去 8 小時的時區偏移
+      m,
+      0,
+      0
+    ));
     let diff = Math.floor((target.getTime() - now.getTime()) / 1000);
     // 若目標時間已過，則倒數到明天的該時間
     if (diff < 0) {
-      target.setDate(target.getDate() + 1);
+      target.setUTCDate(target.getUTCDate() + 1);
       diff = Math.floor((target.getTime() - now.getTime()) / 1000);
     }
     setDuration(diff);
