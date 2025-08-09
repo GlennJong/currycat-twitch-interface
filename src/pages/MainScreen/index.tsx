@@ -1,10 +1,11 @@
-import VoiceInputer from "@/components/VoiceInputer";
 import './style.css'
 import Chatroom from "@/components/Chatroom";
 import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef } from "react";
 import { Ball } from "./RollingBall";
+import Portrait from '../../components/Portrait';
+import FreeWindow from '../../components/FreeWindow/index';
 
 function MainScreen() {
   const ballRef = useRef<Ball>(null);
@@ -38,7 +39,9 @@ function MainScreen() {
 
       </div>
       <div className="bottom">
-        <VoiceInputer />
+        <FreeWindow>
+          <Portrait />
+        </FreeWindow>
       </div>
     </div>
   );
