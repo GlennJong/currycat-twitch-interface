@@ -3,24 +3,34 @@
   flex-direction: column;
   justify-content: space-between;
   width: 100vw;
-  height: 100vh;
+  height: 100vh; /* 確保主容器填滿視窗高度 */
 }
-.top {}
+
+.top {
+  background-color: var(--color-dark);
+}
+
 .center {
   display: flex;
-  height: calc(100vh - 100px);
-  display: flex;
+  flex: 1; /* 使用剩餘空間 */
   justify-content: center;
   align-items: center;
 }
+
 .center .side {
   width: 300px;
   height: 100%;
+  background-color: var(--color-normal);
 }
+
 .center .main {
   flex: 1;
   height: 100%;
+  background-color: var(--color-normal);
 }
+
 .bottom {
-  height: 100px;
+  height: 100px; /* 固定底部高度 */
+  flex-shrink: 0; /* 防止被壓縮 */
+  background-color: var(--color-dark);
 }

@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import MainScreen from './pages/MainScreen';
+import { Color } from './constants';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const GlobalSettingContext = createContext<{
@@ -26,7 +27,26 @@ function App() {
       setId(value);
     }
   }, []);
-  
+
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    const cssVariables = Object.keys(Color)
+      .filter(key => isNaN(Number(key))) // Filter out numeric keys from enum
+      .map(key => `--color-${key.toLowerCase()}: ${Color[key as keyof typeof Color]};`)
+      .join('\n');
+
+    styleElement.innerHTML = `
+      :root {
+        ${cssVariables}
+      }
+    `;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   return (
     <GlobalSettingContext.Provider value={{
       id: id || getCookie('id'),

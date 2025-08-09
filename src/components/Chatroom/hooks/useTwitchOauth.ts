@@ -23,7 +23,7 @@ type WsEventHandler<T> =
     }
   | undefined;
 
-function useTwitchOauth() {
+function useTwitchOauth(maxMessage: number = 15) {
   const [twitchState, setTwitchState] = useState<TwitchOauthLoginState & TwitchUserState>();
   const [receivedMsg, setReceivedMsg] = useState<TwitchWsMessagePayload[]>();
   const receivedMsgRef = useRef<TwitchWsMessagePayload[]>([]);
@@ -57,10 +57,12 @@ function useTwitchOauth() {
     const { access_token, id } = twitchState;
     const ws = new WebSocket(TWITCH_WS_URL);
     ws.onopen = () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       onOpen && onOpen();
     };
     ws.onclose = () => {
       isWsConnectedRef.current = false;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       onClose && onClose();
     };
 
@@ -74,8 +76,12 @@ function useTwitchOauth() {
           
           const newMsg = data.payload;
 
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           onMessage && onMessage(newMsg);
-          receivedMsgRef.current = [...receivedMsgRef.current, newMsg];
+          receivedMsgRef.current = [
+            ...receivedMsgRef.current.slice(-maxMessage + 1), // 保留最多 maxMessage 條訊息
+            newMsg,
+          ];
           setReceivedMsg([...receivedMsgRef.current]);
         }
       } else {
@@ -89,7 +95,9 @@ function useTwitchOauth() {
         if (isSubscribeSuccess) {
           isWsConnectedRef.current = true;
         } else {
-          onError && onError();
+          if (onError) {
+            onError();
+          }
         }
       }
     });

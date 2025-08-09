@@ -1,9 +1,9 @@
 // 徽章的型別保持不變
-interface TwitchBadge {
-    set_id: string;
-    id: string;
-    info: string;
-}
+// interface TwitchBadge {
+//     set_id: string;
+//     id: string;
+//     info: string;
+// }
 
 // 表情符號的型別保持不變
 interface TwitchEmote {
@@ -23,31 +23,31 @@ interface TwitchFragment {
 }
 
 // 訊息內容的型別保持不變
-interface TwitchMessage {
-    text: string;
-    fragments: TwitchFragment[];
-}
+// interface TwitchMessage {
+//     text: string;
+//     fragments: TwitchFragment[];
+// }
 
 // 完整的 Event 物件型別
-interface TwitchEvent {
-    broadcaster_user_id: string;
-    broadcaster_user_login: string;
-    broadcaster_user_name: string;
-    chatter_user_id: string;
-    chatter_user_login: string;
-    chatter_user_name: string;
-    message: TwitchMessage;
-    color: string;
-    badges: TwitchBadge[];
-    source_badges: TwitchBadge[] | null;
-    // 其他欄位...
-}
+// interface TwitchEvent {
+//     broadcaster_user_id: string;
+//     broadcaster_user_login: string;
+//     broadcaster_user_name: string;
+//     chatter_user_id: string;
+//     chatter_user_login: string;
+//     chatter_user_name: string;
+//     message: TwitchMessage;
+//     color: string;
+//     badges: TwitchBadge[];
+//     source_badges: TwitchBadge[] | null;
+//     // 其他欄位...
+// }
 
 // 完整的 WebSocket Payload 型別
-interface TwitchWebSocketPayload {
-    subscription: any; // 簡化處理
-    event: TwitchEvent;
-}
+// interface TwitchWebSocketPayload {
+//     subscription: any; // 簡化處理
+//     event: TwitchEvent;
+// }
 
 
 /**
@@ -56,7 +56,7 @@ interface TwitchWebSocketPayload {
  * @param {TwitchEvent} event - 包含聊天訊息所有細節的 Event 物件。
  * @returns {string} - 包含完整樣式的聊天訊息 HTML 字串。
  */
-export const twitchMessageConverter = (event: TwitchEvent): string => {
+export const twitchMessageConverter = (event: any): string => {
     // 1. 處理使用者名稱和顏色
     // 使用 chatter_user_name 作為顯示名稱
     const userDisplayName: string = event.chatter_user_name;

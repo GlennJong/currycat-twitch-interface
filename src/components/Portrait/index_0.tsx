@@ -31,7 +31,13 @@ function Portrait({ style }: { style?: React.CSSProperties }) {
   
   return (
     <div>
-      <img style={{ display: 'block', width: '100%', height: '100%', ...style }} src="./assets/portrait_a_1.svg" alt="" />
+      <button onClick={() => voiceInputRef.current?.start()}>Start</button>
+      <button onClick={() => voiceInputRef.current?.reset()}>Reset</button>
+      <button onClick={() => voiceInputRef.current?.switch('zh-TW')}>ZH</button>
+      <button onClick={() => voiceInputRef.current?.switch('en')}>EN</button>
+      <div ref={wrapperRef}>
+        <div style={style} ref={dialogElemRef}></div>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './style.css';
+import Checkbox from '../Checkbox';
 
 interface Todo {
   id: number;
@@ -10,24 +11,14 @@ interface Todo {
 const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<Todo[] | null>(null);
   // 初始化時載入 localStorage
-  // 初始化時載入 localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('todos');
-    if (saved) {
-      try {
-        setTodos(JSON.parse(saved));
-      } catch {
-        setTodos([]);
-      }
-    } else {
-      setTodos([]);
-    }
+    setTodos(loadTodosFromLocalStorage());
   }, []);
 
   // todos 變動時自動儲存（僅在 todos 不為 null 時）
   useEffect(() => {
     if (todos !== null) {
-      localStorage.setItem('todos', JSON.stringify(todos));
+      saveTodosToLocalStorage(todos);
     }
   }, [todos]);
   const [input, setInput] = useState('');
@@ -58,48 +49,71 @@ const TodoList: React.FC = () => {
   if (todos === null) return null;
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', padding: 20 }}>
-      <h2>Todo List</h2>
+      {/* <h2>Todo List</h2> */}
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => {
-            if (e.key === 'Enter') addTodo();
+            const event = e as unknown as { isComposing?: boolean; key: string };
+            if (!event.isComposing && event.key === 'Enter') addTodo();
           }}
-          placeholder="新增待辦事項..."
-          style={{ flex: 1, padding: 8 }}
+          placeholder="..."
+          style={{ flex: 1 }}
         />
         <button onClick={addTodo} style={{ padding: '8px 16px' }}>新增</button>
       </div>
-      <ul style={{ listStyle: 'none', padding: 0, marginTop: 16 }}>
-        {todos.map(todo => (
-          <li
-            key={todo.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              marginBottom: 8,
-              background: '#f5f5f5',
-              borderRadius: 4,
-              padding: '8px 12px',
-              textDecoration: todo.completed ? 'line-through' : 'none',
-              opacity: todo.completed ? 0.6 : 1,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => toggleTodo(todo.id)}
-              style={{ marginRight: 8 }}
-            />
-            <span style={{ flex: 1 }}>{todo.text}</span>
-            <button onClick={() => deleteTodo(todo.id)} style={{ marginLeft: 8 }}>刪除</button>
-          </li>
-        ))}
-      </ul>
+      <div style={{
+          listStyle: 'none',
+          margin: '0 -6px',
+          marginTop: '12px',
+        }}
+      >
+        <ul style={{
+          padding: 0,
+          margin: 0,
+          listStyle: 'none',
+        }}>
+          {todos.map(todo => (
+            <li
+              key={todo.id}
+              style={{
+                display: 'flex',
+                opacity: todo.completed ? 0.6 : 1,
+              }}
+            >
+              <Checkbox
+                label=""
+                checked={todo.completed}
+                style={{ marginTop: '2px' }}
+                onChange={() => toggleTodo(todo.id)}
+              />
+              <span style={{ flex: 1, marginLeft: 4, lineBreak: 'anywhere', textDecoration: todo.completed ? 'line-through' : 'none' }}>{todo.text}</span>
+              <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => deleteTodo(todo.id)}>x</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
+};
+
+// 新增工具函數來處理 localStorage 的存取
+const loadTodosFromLocalStorage = (): Todo[] => {
+  const saved = localStorage.getItem('todos');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const saveTodosToLocalStorage = (todos: Todo[]) => {
+  localStorage.setItem('todos', JSON.stringify(todos));
 };
 
 export default TodoList;

@@ -1,9 +1,7 @@
 @font-face {
   font-family: "BoutiqueBitmap";
-  /* font-weight: 600; */
   src: url("/fonts/BoutiqueBitmap9x9.ttf");
 }
-
 
 body {
   margin: 0;
@@ -12,8 +10,80 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: 'BoutiqueBitmap', sans-serif;
+  background-color: var(--color-dark);
+  color: var(--color-dark);
+}
+
+button {
+  border: none;
+  background: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: 6px solid var(--color-dark);
+  font-family: 'BoutiqueBitmap', sans-serif;
+  background-color: var(--color-primary);
+  border-bottom: 6px solid var(--color-secondary);
+  text-transform: uppercase;
+  font-weight: 900;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+button.small {
+  outline: 6px solid var(--color-dark);
+  padding: 4px 8px;
+  font-size: 16px;
+}
+
+button.dark {
+  outline: 6px solid var(--color-light);
+}
+
+input[type=text],
+input[type=time] {
+  border: none;
+  min-width: 100px;
+  background: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: 6px solid var(--color-dark);
+  font-family: 'BoutiqueBitmap', sans-serif;
+  background-color: var(--color-light);
+  border-top: 6px solid var(--color-secondary);
+  font-weight: 900;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+input[type=text].dark,
+input[type=time].dark {
+  outline: 6px solid var(--color-light);
+  border-color: var(--color-normal);
+  background-color: var(--color-dark);
+  color: var(--color-light);
+}
+
+button:active {
+  margin-bottom: 6px;
+  transform: translate(0px, 6px);
+  border-bottom: 0px solid var(--color-secondary);
+}
+
+input + button {
+  margin-left: -2px;
 }
 
 a {
   text-decoration: none;
+}
+
+
+h1 {
+  font-size: 32px;
+  margin: 0;
+  padding: 0;
+}
+
+p, span {
+  font-size: 20px;
 }

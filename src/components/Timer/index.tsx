@@ -1,31 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './style.css';
+import { Clock, CounterBack, CounterFront } from '../Icons/counter';
+import { Color } from '@/constants';
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
 
 const Timer: React.FC = () => {
-  const [inputTime, setInputTime] = useState('12:00');
+  // 計算當前時間 + 1 小時，並格式化為 hh:mm
+  const getDefaultInputTime = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    return now.toISOString().slice(11, 16); // 提取 hh:mm 格式
+  };
+
+  const [inputTime, setInputTime] = useState(getDefaultInputTime()); // 預設值改為當前時間 + 1 小時
   const [duration, setDuration] = useState(60); // 總秒數
   const [remaining, setRemaining] = useState<number | null>(null); // null 表示尚未開始
   const [dragging, setDragging] = useState(false);
-  const barRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<number | null>(null);
 
   // 倒數計時
   useEffect(() => {
     if (remaining === null || remaining <= 0) return;
-    timerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       setRemaining(prev => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearInterval(timer);
     };
   }, [remaining]);
 
   // 當倒數結束
   useEffect(() => {
-    if (remaining === 0 && timerRef.current) {
-      clearInterval(timerRef.current);
+    if (remaining === 0) {
+      setRemaining(null);
     }
   }, [remaining]);
 
@@ -47,15 +54,15 @@ const Timer: React.FC = () => {
   // 拖曳 bar
   const onBarMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     setDragging(true);
-    const bar = barRef.current;
-    if (!bar || remaining === null) return;
+    const bar = e.currentTarget; // 使用事件目標作為 bar
+    if (remaining === null) return;
     const rect = bar.getBoundingClientRect();
     const startX = e.clientX;
     const startWidth = (remaining / duration) * rect.width;
 
     const onMouseMove = (moveEvent: MouseEvent) => {
       const dx = moveEvent.clientX - startX;
-  const percent = clamp((startWidth + dx) / rect.width, 0, 1);
+      const percent = clamp((startWidth + dx) / rect.width, 0, 1);
       let newSeconds = Math.round(percent * duration);
       newSeconds = clamp(newSeconds, 1, duration);
       setRemaining(newSeconds);
@@ -69,13 +76,11 @@ const Timer: React.FC = () => {
     window.addEventListener('mouseup', onMouseUp);
   };
 
-  // 拖曳 bar 改變總時間
   const onBarContainerMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (remaining === null) return;
-    const bar = barRef.current;
-    if (!bar) return;
+    const bar = e.currentTarget; // 使用事件目標作為 bar
     const rect = bar.getBoundingClientRect();
-  const percent = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    const percent = clamp((e.clientX - rect.left) / rect.width, 0, 1);
     let newSeconds = Math.round(percent * duration);
     newSeconds = clamp(newSeconds, 1, duration);
     setRemaining(newSeconds);
@@ -87,81 +92,65 @@ const Timer: React.FC = () => {
     // 不重設 inputTime，保留原本輸入
   };
 
+  // 修改 remaining 的顯示格式為 hh:mm:ss
+  const formatRemainingTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: 20 }}>
-      <h2>倒數計時器</h2>
-      {remaining === null ? (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            type="time"
-            value={inputTime}
-            onChange={e => setInputTime(e.target.value)}
-            style={{ flex: 1, padding: 8 }}
-          />
-          <button onClick={startTimer} style={{ padding: '8px 16px' }}>確定</button>
-        </div>
-      ) : (
-        <div>
-          <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 16 }}>
-            {(() => {
-              const sec = Math.max(remaining, 0);
-              const h = Math.floor(sec / 3600).toString().padStart(2, '0');
-              const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
-              const s = (sec % 60).toString().padStart(2, '0');
-              return `${h}:${m}:${s}`;
-            })()}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ maxWidth: 400, padding: '12px 24px', height: '48px', display: 'flex', flexDirection: 'column' }}>
+        {remaining === null ? (
+          <div style={{ display: 'flex', gap: 8, }}>
+            <input
+              className="dark"
+              type="time"
+              value={inputTime}
+              onChange={e => setInputTime(e.target.value)}
+            />
+            <button className="dark" onClick={startTimer}>確定</button>
           </div>
-          <div
-            ref={barRef}
-            onMouseDown={onBarMouseDown}
-            style={{
-              width: '100%',
-              height: 32,
-              background: '#eee',
-              borderRadius: 8,
-              position: 'relative',
-              cursor: dragging ? 'grabbing' : 'pointer',
-              userSelect: 'none',
-              marginBottom: 16,
-            }}
-          >
-            <div
-              style={{
-                width: `${(remaining / duration) * 100}%`,
-                height: '100%',
-                background: '#4caf50',
-                borderRadius: 8,
-                transition: dragging ? 'none' : 'width 0.2s',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                left: `${(remaining / duration) * 100}%`,
-                top: 0,
-                height: '100%',
-                width: 4,
-                background: '#333',
-                borderRadius: 2,
-                transform: 'translateX(-2px)',
-                cursor: 'ew-resize',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: '100%',
-                height: '100%',
-                zIndex: 1,
-              }}
-              onMouseDown={onBarContainerMouseDown}
-            />
+        ) : (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Clock style={{ width: '42px', color: Color.Light }} onClick={cancelTimer} />
+            <div className="counter" style={{ height: '48px' }}>
+              <CounterBack style={{ color: Color.Light2 }} />
+              <div className="bar">
+                <div
+                  onMouseDown={onBarMouseDown}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                    cursor: dragging ? 'grabbing' : 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      width: '100%',
+                      height: '100%',
+                      zIndex: 1,
+                    }}
+                    onMouseDown={onBarContainerMouseDown}
+                  />
+                </div>
+                <div className="length" style={{ width: `${(remaining / duration) * 100}%` }}></div>
+              </div>
+              <CounterFront style={{ color: Color.Light }} />
+            </div>
           </div>
-          <button onClick={cancelTimer} style={{ padding: '8px 16px' }}>Cancel</button>
-        </div>
-      )}
+        )}
+      </div>
+      <div style={{ padding: '8px 24px', color: Color.Light, fontSize: 32 }}>
+        {remaining !== null ? formatRemainingTime(Math.max(remaining, 0)) : ''}
+      </div>
     </div>
   );
 };

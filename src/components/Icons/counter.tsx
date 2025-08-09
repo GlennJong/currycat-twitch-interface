@@ -1,0 +1,21 @@
+export const Clock = ({ ...props }) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 8" { ...props }>
+      <path fill="currentColor" d="M1 0h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5zM0 1h1v1H0zm6 0h1v1H6zM0 2h1v1H0zm3 0h1v1H3zm3 0h1v1H6zM0 3h1v1H0zm3 0h1v1H3zm1 0h1v1H4zm2 0h1v1H6zM0 4h1v1H0zm6 0h1v1H6zM0 5h1v1H0zm6 0h1v1H6zM1 6h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5z"/>
+    </svg>
+  )
+}
+export const CounterFront = ({ ...props }) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53 10" { ...props }>
+      <path fill="currentColor" d="M1 0h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM0 1h1v1H0zm1 0h1v1H1zm1 0h1v1H2zm8 0h1v1h-1zm9 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm7 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM0 2h1v1H0zm1 0h1v1H1zm9 0h1v1h-1zm9 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm1 0h1v1h-1zM0 3h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 4h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 5h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 6h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 7h1v1H0zm1 0h1v1H1zm1 0h1v1H2zm48 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM1 8h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1z"/>
+    </svg>
+  )
+}
+export const CounterBack = ({ ...props }) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53 10" {...props}>
+      <path fill="currentColor" d="M1 1h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM0 2h1v1H0zm1 0h1v1H1zm1 0h1v1H2zm8 0h1v1h-1zm9 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm7 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM0 3h1v1H0zm1 0h1v1H1zm9 0h1v1h-1zm9 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm8 0h1v1h-1zm1 0h1v1h-1zM0 4h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 5h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 6h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 7h1v1H0zm1 0h1v1H1zm50 0h1v1h-1zm1 0h1v1h-1zM0 8h1v1H0zm1 0h1v1H1zm1 0h1v1H2zm48 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM1 9h1v1H1zm1 0h1v1H2zm1 0h1v1H3zm1 0h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1z"/>
+    </svg>
+  )
+}
