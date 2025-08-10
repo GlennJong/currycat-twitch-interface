@@ -57,7 +57,7 @@ class Cat {
     this.cat.style.transition = `left linear ${MOVING_DURATION}ms, top linear ${MOVING_DURATION}ms`;
     this.cat.style.left = this.x + 'px';
     this.cat.style.top = this.y + 'px';
-    this.cat.style.backgroundImage = `url('../assets/cat.svg')`;
+    this.cat.style.backgroundImage = `url('./assets/cat.svg')`;
     this.cat.style.backgroundSize = `${CAT_SIZE * 6}px ${CAT_SIZE * 8}px`;
     // 設定預設狀態
     document.body.appendChild(this.cat);
@@ -68,7 +68,7 @@ class Cat {
     this.item.style.zIndex = '1000';
     this.item.style.width = `${ITEM_SIZE}px`;
     this.item.style.height = `${ITEM_SIZE}px`;
-    this.item.style.backgroundImage = `url('../assets/cup.svg')`;
+    this.item.style.backgroundImage = `url('./assets/cup.svg')`;
     this.moveItem();
     document.body.appendChild(this.item);
 
