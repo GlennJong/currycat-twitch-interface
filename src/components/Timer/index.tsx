@@ -123,9 +123,9 @@ const Timer: React.FC = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
-            <Clock style={{ width: '42px', color: Color.Light }} onClick={cancelTimer} />
+            <Clock style={{ width: '42px', color: Color.WhiteLight }} onClick={cancelTimer} />
             <div className="counter" style={{ height: '48px' }}>
-              <CounterBack style={{ color: Color.Light2 }} />
+              <CounterBack style={{ color: Color.WhiteWhiteDark }} />
               <div className="bar">
                 <div
                   onMouseDown={onBarMouseDown}
@@ -151,12 +151,12 @@ const Timer: React.FC = () => {
                 </div>
                 <div className="length" style={{ width: `${(remaining / duration) * 100}%` }}></div>
               </div>
-              <CounterFront style={{ color: Color.Light }} />
+              <CounterFront style={{ color: Color.WhiteLight }} />
             </div>
           </div>
         )}
       </div>
-      <div style={{ padding: '8px 24px', color: Color.Light, fontSize: 32 }}>
+      <div style={{ padding: '8px 24px', color: Color.WhiteLight, fontSize: 32 }}>
         {remaining !== null ? formatRemainingTime(Math.max(remaining, 0)) : ''}
       </div>
     </div>

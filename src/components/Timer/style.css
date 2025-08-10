@@ -23,6 +23,6 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: var(--color-primary);
-  box-shadow: inset 0 14px 0 0 var(--color-secondary);
+  background: var(--color-yellowlight);
+  box-shadow: inset 0 14px 0 0 var(--color-yellowdark);
 }

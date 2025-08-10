@@ -10,6 +10,7 @@ import Window from '@/components/Window';
 import Checkbox from '@/components/Checkbox/index';
 import { Color } from '@/constants';
 import Dialogue from '@/components/Dialogue';
+import ColorPicker from '../../components/ColorPicker/index';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
@@ -18,6 +19,7 @@ function MainScreen() {
   const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
   const [ isDialogueShow, setIsDialogueShow ] = useState(false);
   const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
+  const [ greenScreenColor, setGreenScreenColor ] = useState<string>(Color.BlackLight);
   const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
 
@@ -74,7 +76,7 @@ function MainScreen() {
         <div className="top">
           <Timer />
         </div>
-        <div className="center">
+        <div className="center" style={{ backgroundColor: greenScreenColor }}>
           <div className="main">
           </div>
           <div className="side">
@@ -85,7 +87,7 @@ function MainScreen() {
 
         </div>
         <div className="bottom">
-          <div style={{ display: 'flex', gap: '12px', padding: '12px 24px', color: Color.Light }}>
+          <div style={{ display: 'flex', gap: '12px', padding: '12px 24px', color: Color.WhiteLight }}>
             <div>
               <Checkbox
                 theme="light"
@@ -139,6 +141,9 @@ function MainScreen() {
                   </button> */}
                 </div>
               }
+            </div>
+            <div>
+              <ColorPicker defaultColor={greenScreenColor} onChange={(color) => setGreenScreenColor(color)} />
             </div>
           </div>
         </div>

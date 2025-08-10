@@ -12,7 +12,7 @@
   flex-wrap: wrap;
   padding-left: 6px;
   white-space: break-spaces;
-  color: var(--color-dark);
+  color: var(--color-blackdark);
   font-size: 20px;
 }
 .chat-line .chat-emote {

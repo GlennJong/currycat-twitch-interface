@@ -10,8 +10,8 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: 'BoutiqueBitmap', sans-serif;
-  background-color: var(--color-dark);
-  color: var(--color-dark);
+  background-color: var(--color-blackdark);
+  color: var(--color-blackdark);
 }
 
 button {
@@ -19,10 +19,10 @@ button {
   background: none;
   padding: 6px 12px;
   cursor: pointer;
-  outline: 6px solid var(--color-dark);
+  outline: 6px solid var(--color-blackdark);
   font-family: 'BoutiqueBitmap', sans-serif;
-  background-color: var(--color-primary);
-  border-bottom: 6px solid var(--color-secondary);
+  background-color: var(--color-yellowlight);
+  border-bottom: 6px solid var(--color-yellowdark);
   text-transform: uppercase;
   font-weight: 900;
   font-size: 20px;
@@ -30,19 +30,19 @@ button {
 }
 
 button.small {
-  outline: 6px solid var(--color-dark);
+  outline: 6px solid var(--color-blackdark);
   padding: 4px 8px;
   font-size: 16px;
 }
 
 button.xs {
-  outline: 3px solid var(--color-dark);
+  outline: 3px solid var(--color-blackdark);
   padding: 0;
   font-size: 12px;
 }
 
 button.dark {
-  outline: 6px solid var(--color-light);
+  outline: 6px solid var(--color-whitelight);
 }
 
 input[type=text],
@@ -52,10 +52,10 @@ input[type=time] {
   background: none;
   padding: 6px 12px;
   cursor: pointer;
-  outline: 6px solid var(--color-dark);
+  outline: 6px solid var(--color-blackdark);
   font-family: 'BoutiqueBitmap', sans-serif;
-  background-color: var(--color-light);
-  border-top: 6px solid var(--color-secondary);
+  background-color: var(--color-whitelight);
+  border-top: 6px solid var(--color-whitedark);
   font-weight: 900;
   font-size: 20px;
   white-space: nowrap;
@@ -63,16 +63,16 @@ input[type=time] {
 
 input[type=text].dark,
 input[type=time].dark {
-  outline: 6px solid var(--color-light);
-  border-color: var(--color-normal);
-  background-color: var(--color-dark);
-  color: var(--color-light);
+  outline: 6px solid var(--color-whitelight);
+  border-color: var(--color-blacklight);
+  background-color: var(--color-blackdark);
+  color: var(--color-whitelight);
 }
 
 button:active {
   margin-bottom: 6px;
   transform: translate(0px, 6px);
-  border-bottom: 0px solid var(--color-secondary);
+  border-bottom: 0px solid var(--color-yellowdark);
 }
 
 input + button {

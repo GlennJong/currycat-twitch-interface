@@ -7,7 +7,7 @@
 }
 
 .top {
-  background-color: var(--color-dark);
+  background-color: var(--color-blackdark);
 }
 
 .center {
@@ -20,17 +20,15 @@
 .center .side {
   width: 300px;
   height: 100%;
-  background-color: var(--color-normal);
 }
 
 .center .main {
   flex: 1;
   height: 100%;
-  background-color: var(--color-normal);
 }
 
 .bottom {
   height: 84px; /* 固定底部高度 */
   flex-shrink: 0; /* 防止被壓縮 */
-  background-color: var(--color-dark);
+  background-color: var(--color-blackdark);
 }

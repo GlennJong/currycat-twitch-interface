@@ -33,16 +33,16 @@ function getCheckbox({ size, color }: { size: number; color: string }) {
 
 export const frame = getFrame({
   size: 160,
-  stroke: Color.Dark,
-  frame: Color.Light,
-  background: Color.Light,
+  stroke: Color.BlackDark,
+  frame: Color.WhiteLight,
+  background: Color.WhiteLight,
 });
 
 export const checkbox = getCheckbox({
   size: 12,
-  color: Color.Dark,
+  color: Color.BlackDark,
 });
 export const checkboxLight = getCheckbox({
   size: 12,
-  color: Color.Light,
+  color: Color.WhiteLight,
 });
