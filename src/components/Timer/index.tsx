@@ -125,7 +125,7 @@ const Timer: React.FC = () => {
           <div style={{ display: 'flex', gap: 8 }}>
             <Clock style={{ width: '42px', color: Color.WhiteLight }} onClick={cancelTimer} />
             <div className="counter" style={{ height: '48px' }}>
-              <CounterBack style={{ color: Color.WhiteWhiteDark }} />
+              <CounterBack style={{ color: Color.WhiteDark }} />
               <div className="bar">
                 <div
                   onMouseDown={onBarMouseDown}
