@@ -51,6 +51,7 @@ export function VoiceInputUtility(params: VoiceInputUtilityParams = {}) {
     if (transcriptBuffer.trim()) {
       onSentenceEnd?.(transcriptBuffer.trim())
       lastSentence = transcriptBuffer.trim()
+      console.log(lastSentence)
     }
     transcriptBuffer = ''
     clearTimers()
