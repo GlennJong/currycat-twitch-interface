@@ -1,7 +1,7 @@
 import { checkbox, checkboxLight } from "@/utils/frame";
 
 
-const Switch = ({ theme='dark', checked, label, onChange, style }: { theme?: 'dark' | 'light', checked: boolean, label: string, style?: React.CSSProperties, onChange: (value: boolean) => void }) => {
+const Checkbox = ({ theme='dark', checked, label, onChange, style }: { theme?: 'dark' | 'light', checked: boolean, label: string, style?: React.CSSProperties, onChange: (value: boolean) => void }) => {
   return (
     <label style={{ display: 'flex', alignItems: 'center', ...style}}>
       <div style={{ width: '18px', height: '18px', overflow: 'hidden' }}>
@@ -23,4 +23,4 @@ const Switch = ({ theme='dark', checked, label, onChange, style }: { theme?: 'da
   )
 }
 
-export default Switch;
+export default Checkbox;

@@ -3,7 +3,7 @@ import Chatroom from "@/components/Chatroom";
 import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
-import { Ball } from "./RollingBall";
+import { Cat } from "./Cat";
 import Portrait, { PortraitRef } from '../../components/Portrait';
 import FreeWindow from '../../components/FreeWindow/index';
 import Window from '@/components/Window';
@@ -16,32 +16,28 @@ function MainScreen() {
   const [ isDialogueOpen, setIsDialogueOpen ] = useState(false);
   const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(false);
   const [ isDialogueShow, setIsDialogueShow ] = useState(false);
+  const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
   const portraitRef = useRef<PortraitRef>(null);
-  const ballRef = useRef<Ball>(null);
+  const catRef = useRef<Cat>(null);
 
-  // useEffect(() => {
-  //   if (!ballRef.current) {
-  //     ballRef.current = new Ball(200, 200);
-  //   }
-  //   return () => {
-  //     ballRef.current?.destroy();
-  //     ballRef.current = null;
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (!catRef.current) {
+      catRef.current = new Cat(window.innerWidth/2, window.innerHeight/2);
+    }
+    return () => {
+      catRef.current?.destroy();
+      catRef.current = null;
+    }
+  }, []);
   
   return (
     <>
       <div className="main-screen">
-        {/* <button onClick={() => ballRef.current?.left(100)}>left</button>
-        <button onClick={() => ballRef.current?.right(100)}>right</button>
-        <button onClick={() => ballRef.current?.leftUp(100)}>leftUp</button> */}
         <div className="top">
           <Timer />
         </div>
         <div className="center">
           <div className="main">
-            {/* main */}
-            {/* <button className="button">test</button> */}
           </div>
           <div className="side">
             <Window>
@@ -75,6 +71,15 @@ function MainScreen() {
                   onChange={(checked) => setIsDialogueForceHide(checked)}
                 />
               }
+              { isDialogueOpen &&
+                <Checkbox
+                  theme="light"
+                  checked={dialogueLanguage === 'zh-TW'}
+                  label={dialogueLanguage}
+                  onChange={(checked) => setDialogueLanguage(checked ? 'zh-TW' : 'en')}
+                />
+              }
+              
             </div>
             <div>
               <Checkbox
@@ -83,6 +88,15 @@ function MainScreen() {
                 label="CURRY CAT"
                 onChange={(checked) => setIsTodoListOpen(checked)}
               />
+              <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
+                <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
+              </button>
+              <button className="xs" onClick={() => catRef.current?.up(50)}>
+                <span style={{ transform: 'rotate(0deg)' }}>▴</span>
+              </button>
+              <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
+                <span style={{ transform: 'rotate(45deg)' }}>▴</span>
+              </button>
             </div>
           </div>
         </div>

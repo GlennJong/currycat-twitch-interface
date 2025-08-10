@@ -35,6 +35,12 @@ button.small {
   font-size: 16px;
 }
 
+button.xs {
+  outline: 3px solid var(--color-dark);
+  padding: 0;
+  font-size: 12px;
+}
+
 button.dark {
   outline: 6px solid var(--color-light);
 }
