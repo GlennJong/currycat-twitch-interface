@@ -4,31 +4,69 @@ import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
-import Portrait, { PortraitRef } from '../../components/Portrait';
-import FreeWindow from '../../components/FreeWindow/index';
+import Portrait, { PortraitRef } from '@/components/Portrait';
+import FreeWindow from '@/components/FreeWindow/index';
 import Window from '@/components/Window';
-import Checkbox from '../../components/Checkbox/index';
+import Checkbox from '@/components/Checkbox/index';
 import { Color } from '@/constants';
 import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
+  const [ isCatOpen, setIsCatOpen ] = useState(true);
   const [ isDialogueOpen, setIsDialogueOpen ] = useState(false);
-  const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(false);
+  const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
   const [ isDialogueShow, setIsDialogueShow ] = useState(false);
   const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
   const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
 
   useEffect(() => {
+    handleStartCat();
+    return () => {
+      handleDestroyCat();
+    }
+  }, []);
+
+  const handleStartCat = () => {
     if (!catRef.current) {
       catRef.current = new Cat(window.innerWidth/2, window.innerHeight/2);
     }
-    return () => {
+  }
+  const handleDestroyCat = () => {
+    if (catRef.current) {
       catRef.current?.destroy();
       catRef.current = null;
     }
-  }, []);
+  }
+
+  const handleControlCat = (msg: string) => {
+    const direction = {
+      leftUp: ['leftup', '↖', '左上', '上左'],
+      leftDown: ['leftdown', '↙', '左下', '下左'],
+      rightUp: ['rightup', '↗', '右上', '上右'],
+      rightDown: ['rightdown', '↘', '右下', '下右'],
+      left: ['left', '左', '←'],
+      right: ['right', '右', '→'],
+      up: ['up', 'top', '上', '↑'],
+      down: ['down', 'bottom', '下', '↓'],
+    }
+    if (catRef.current) {
+      for (const key in direction) {
+        if (direction[key as keyof typeof direction].some((word: string) => msg.includes(word))) {
+          (catRef.current as any)[key](20 + Math.floor(Math.random() * 10));
+        }
+      }
+    }
+  }
+  
+  useEffect(() => {
+    if (isCatOpen) {
+      handleStartCat();
+    } else {
+      handleDestroyCat();
+    }
+  }, [isCatOpen])
   
   return (
     <>
@@ -41,13 +79,13 @@ function MainScreen() {
           </div>
           <div className="side">
             <Window>
-              <Chatroom />
+              <Chatroom onInput={handleControlCat} />
             </Window>
           </div>
 
         </div>
         <div className="bottom">
-          <div style={{ padding: '12px 24px', color: Color.Light }}>
+          <div style={{ display: 'flex', gap: '12px', padding: '12px 24px', color: Color.Light }}>
             <div>
               <Checkbox
                 theme="light"
@@ -67,7 +105,7 @@ function MainScreen() {
                 <Checkbox
                   theme="light"
                   checked={isDialogueForceHide}
-                  label="DIALOGUE HIDE"
+                  label="HIDE"
                   onChange={(checked) => setIsDialogueForceHide(checked)}
                 />
               }
@@ -84,19 +122,23 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
-                checked={isTodoListOpen}
+                checked={isCatOpen}
                 label="CURRY CAT"
-                onChange={(checked) => setIsTodoListOpen(checked)}
+                onChange={(checked) => setIsCatOpen(checked)}
               />
-              <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
-                <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
-              </button>
-              <button className="xs" onClick={() => catRef.current?.up(50)}>
-                <span style={{ transform: 'rotate(0deg)' }}>▴</span>
-              </button>
-              <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
-                <span style={{ transform: 'rotate(45deg)' }}>▴</span>
-              </button>
+              { isCatOpen &&
+                <div>
+                  {/* <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
+                    <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
+                  </button>
+                  <button className="xs" onClick={() => catRef.current?.up(50)}>
+                    <span style={{ transform: 'rotate(0deg)' }}>▴</span>
+                  </button>
+                  <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
+                    <span style={{ transform: 'rotate(45deg)' }}>▴</span>
+                  </button> */}
+                </div>
+              }
             </div>
           </div>
         </div>

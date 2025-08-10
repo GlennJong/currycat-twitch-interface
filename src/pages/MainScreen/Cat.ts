@@ -2,7 +2,7 @@ const CAT_SIZE = 54;
 const ITEM_SIZE = 39;
 const MOVING_DURATION = 600;
 const RUNNING_INTERVAL = 100;
-const TOUCHING_INTERVAL = 300;
+const TOUCHING_INTERVAL = 400;
 const IDLE_WAITING_TIME = 10000;
 
 const cat: Record<string, [number, number][]> = {
@@ -73,6 +73,9 @@ class Cat {
     document.body.appendChild(this.item);
 
     this.setState('stop');
+
+    // 綁定 mousedown 事件
+    document.addEventListener('mousedown', this.handleMouseDown.bind(this));
   }
 
   private setState(newState: 'stop' | 'idle' | 'running' | 'touching'): void {
@@ -225,6 +228,25 @@ class Cat {
 
     // 停止動畫
     clearInterval(animationInterval);
+  }
+
+  private handleMouseDown(event: MouseEvent): void {
+    const targetX = event.clientX - CAT_SIZE / 2;
+    const targetY = event.clientY - CAT_SIZE / 2;
+
+    const dx = targetX - this.x;
+    const dy = targetY - this.y;
+
+    const direction = this.calculateDirection(dx, dy);
+    this.move(dx, dy, direction);
+  }
+
+  private calculateDirection(dx: number, dy: number): string {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return dx > 0 ? 'right' : 'left';
+    } else {
+      return dy > 0 ? 'down' : 'up';
+    }
   }
 
   // 8 個方向的移動方法

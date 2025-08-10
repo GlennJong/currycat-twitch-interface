@@ -3,7 +3,7 @@ import useTwitchOauth from "./hooks/useTwitchOauth";
 import { twitchMessageConverter } from "./utils/twitchMessageConverter";
 import './style.css';
 
-function Chatroom() {
+function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
   const [ isSyncisSyncing, setIsSyncing ] = useState<boolean>(false);
   const { messages, twitchState, startOauthConnect, startWebsocket } = useTwitchOauth();
   const scrollRef = useRef<HTMLDivElement>(null); // 新增滾動容器的 ref
@@ -12,7 +12,8 @@ function Chatroom() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight; // 將卷軸拉到最底部
     }
-  }, [messages]); // 當 messages 更新時觸發
+    onInput(messages?.[messages.length - 1]?.event?.message.text || '');
+  }, [messages, onInput]); // 當 messages 更新時觸發
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>

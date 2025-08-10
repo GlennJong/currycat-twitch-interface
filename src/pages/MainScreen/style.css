@@ -30,7 +30,7 @@
 }
 
 .bottom {
-  height: 100px; /* 固定底部高度 */
+  height: 84px; /* 固定底部高度 */
   flex-shrink: 0; /* 防止被壓縮 */
   background-color: var(--color-dark);
 }
