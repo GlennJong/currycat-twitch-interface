@@ -19,7 +19,10 @@ function MainScreen() {
   const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
   const [ isDialogueShow, setIsDialogueShow ] = useState(false);
   const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
-  const [ greenScreenColor, setGreenScreenColor ] = useState<string>(Color.BlackLight);
+  const [ greenScreenColor, setGreenScreenColor ] = useState<string>(() => {
+    const storedColor = localStorage.getItem('greenScreenColor');
+    return storedColor ? storedColor : Color.BlackLight;
+  });
   const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
 
@@ -69,6 +72,10 @@ function MainScreen() {
       handleDestroyCat();
     }
   }, [isCatOpen])
+
+  useEffect(() => {
+    localStorage.setItem('greenScreenColor', greenScreenColor);
+  }, [greenScreenColor]);
   
   return (
     <>
