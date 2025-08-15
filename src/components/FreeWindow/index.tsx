@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useRef } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import './style.css';
 import { frame } from '../../utils/frame';
