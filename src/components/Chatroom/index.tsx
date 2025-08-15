@@ -18,7 +18,8 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
       {twitchState ? (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%'}}>
           <div style={{ textAlign: 'center', flexShrink: 0 }}>
           { !isSyncisSyncing &&
             <button
@@ -37,10 +38,12 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
           </div>
           { isSyncisSyncing &&
             <div
-              ref={scrollRef} // 將滾動容器綁定到 ref
+              ref={scrollRef}
               style={{
                 flex: 1,
-                overflowY: 'hidden', // prevent visible scroll bar
+                height: '100%',
+                overflowY: 'auto'
+                // overflowY: 'hidden', // prevent visible scroll bar
               }}
             >
               { messages?.map(_message => 

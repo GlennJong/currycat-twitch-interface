@@ -56,6 +56,7 @@ input[type=time] {
   font-family: 'BoutiqueBitmap', sans-serif;
   background-color: var(--color-whitelight);
   border-top: 6px solid var(--color-whitedark);
+  color: var(--color-blackdark);
   font-weight: 900;
   font-size: 20px;
   white-space: nowrap;

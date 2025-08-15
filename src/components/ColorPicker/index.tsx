@@ -5,9 +5,12 @@ const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChan
   const [color, setColor] = useState(defaultColor || "#ffffff");
 
   useEffect(() => {
+    if (defaultColor === color) return;
+    
+    console.log('change')
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     onChange && onChange(color);
-  }, [color, onChange]);
+  }, [color, defaultColor, onChange]);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', }}>

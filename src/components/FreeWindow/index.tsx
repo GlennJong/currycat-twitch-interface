@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import './style.css';
 import { frame } from '../../utils/frame';
@@ -41,12 +41,7 @@ const FreeWindow = ({
     localStorage.setItem(`${id}-size`, JSON.stringify(size));
   }, [id, size]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
     if (isDragging) {
       setPosition({
         x: e.clientX - dragStart.x,
@@ -61,11 +56,31 @@ const FreeWindow = ({
         height: Math.max(resizeStart.height + deltaY, minHeight),
       });
     }
-  };
+  }, [isDragging, isResizing, dragStart, resizeStart, minWidth, minHeight]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = React.useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -92,7 +107,7 @@ const FreeWindow = ({
         borderImageWidth: '32px',
         ...style
       }}
-      onMouseMove={handleMouseMove}
+      // onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
       <div className="header" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}></div>
