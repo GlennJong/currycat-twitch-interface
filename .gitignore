@@ -7,3 +7,4 @@
 
 # local env files
 .env
+.env.prod
