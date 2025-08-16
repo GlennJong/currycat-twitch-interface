@@ -1,4 +1,5 @@
-import { useRef, forwardRef, useImperativeHandle } from "react";
+import { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
+import VoiceInputer from "./ws-voice-inputer";
 
 export type PortraitRef = {
   switch: (type?: string) => void;
@@ -12,7 +13,27 @@ const Portrait = forwardRef(function Portrait(
   const containerRef = useRef<HTMLDivElement>(null);
   const typeRef = useRef<string>("normal");
   const idRef = useRef<string>("0");
+  const voiceInputer = useRef<VoiceInputer>(null);
 
+
+  useEffect(() => {
+    voiceInputer.current = new VoiceInputer({
+      onStart: () => {
+        console.log('VoiceInputer: Recognition started.');
+      },
+      onError: (event) => {
+        console.error('VoiceInputer: Recognition error:', event);
+      },
+      onSilence: () => {
+        handleSwitchPhoto();
+      },
+      onSpeak: (transcript) => {
+        console.log('VoiceInputer: Recognition result:', transcript);
+      }
+    })
+    voiceInputer.current.start();
+  }, [])
+  
   const handleSwitchPhoto = (type?: string) => {
     if (containerRef.current) {
       if (type) typeRef.current = type;
