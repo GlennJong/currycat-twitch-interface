@@ -2,6 +2,10 @@ import { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { VoiceDetectUtility } from "./voice";
 // import VoiceInputer from "./ws-voice-inputer";
 
+// 尺寸配置常數
+const PORTRAIT_SIZE = 120; // 單個角色顯示尺寸
+const SPRITE_SHEET_SIZE = PORTRAIT_SIZE * 2; // sprite sheet 總尺寸 (2x2 grid)
+
 export type PortraitRef = {
   switch: (type?: string) => void;
   reset: () => void;
@@ -21,30 +25,29 @@ const Portrait = forwardRef(function Portrait(
 
   useEffect(() => {
     voiceInputer.current = VoiceDetectUtility({
-      // onStart: () => {
-      //   console.log('VoiceInputer: Recognition started.');
-      // },
-      // onError: (event: any) => {
-      //   console.error('VoiceInputer: Recognition error:', event);
-      // },
       onSilence: () => {
-        console.log('slience')
+        console.log('silence detected')
         handleResetPhoto();
       },
       onVoice: () => {
-        console.log('voice')
+        console.log('voice detected')
         handleSwitchPhoto();
       },
-      threshold: 0.01
+      threshold: 0.05
     })
+
+    // 清理函數
+    return () => {
+      voiceInputer.current?.destroy()
+    }
   }, [])
   
   const handleSwitchPhoto = (type?: string) => {
     if (containerRef.current) {
       if (type) typeRef.current = type;
       idRef.current = idRef.current === "0" ? "1" : "0";
-      const x = idRef.current === "0" ? 0 : -160; // 假設每個角色的高度為 160px
-      const y = typeRef.current === "normal" ? 0 : -160; // 假設每個角色的寬度為 160px
+      const x = idRef.current === "0" ? 0 : -PORTRAIT_SIZE;
+      const y = typeRef.current === "normal" ? 0 : -PORTRAIT_SIZE;
       containerRef.current.style.backgroundPosition = `${x}px ${y}px`;
     }
   };
@@ -69,11 +72,11 @@ const Portrait = forwardRef(function Portrait(
       ref={containerRef}
       style={{
         display: "block",
-        width: "160px", // 假設每個角色的寬度為 160px
-        height: "160px", // 假設每個角色的高度為 160px
+        width: `${PORTRAIT_SIZE}px`,
+        height: `${PORTRAIT_SIZE}px`,
         backgroundImage: "url('./assets/portrait.svg')",
         backgroundPosition: "0px 0px",
-        backgroundSize: "320px 320px", // 假設大圖的尺寸為 320px x 320px
+        backgroundSize: `${SPRITE_SHEET_SIZE}px ${SPRITE_SHEET_SIZE}px`,
         ...style,
       }}
     />

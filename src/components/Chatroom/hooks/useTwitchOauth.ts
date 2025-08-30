@@ -8,7 +8,8 @@ import {
 import { TWITCH_WS_URL } from "./constants";
 import { TwitchOauthLoginState, TwitchUserState, TwitchWsMessagePayload } from "./types";
 
-
+// localStorage key for manual twitch state
+const MANUAL_TWITCH_STATE_KEY = "manual_twitch_state";
 
 // constants
 const client_id = import.meta.env["VITE_TWITCH_CLIENT_ID"];
@@ -26,22 +27,62 @@ type WsEventHandler<T> =
 function useTwitchOauth(maxMessage: number = 15) {
   const [twitchState, setTwitchState] = useState<TwitchOauthLoginState & TwitchUserState>();
   const [receivedMsg, setReceivedMsg] = useState<TwitchWsMessagePayload[]>([]);
+  console.log('twitchState', twitchState)
   
   const receivedMsgRef = useRef<TwitchWsMessagePayload[]>([]);
   const websocketRef = useRef<WebSocket>(null);
   const isWsConnectedRef = useRef<boolean>(false);
 
-  // Get twitch login state from querystring
-  const handleGetTwitchState = useCallback(async () => {
-    const loginData = getTwitchLoginStateFromQueryString();
-    if (!loginData) return;
-
-    const { access_token } = loginData;
-    const userData = await getTwitchUserProfile(client_id, access_token);
-    if (!userData) return;
-
-    setTwitchState({ ...loginData, ...userData });
+  // Save manual twitch state to localStorage
+  const saveManualTwitchState = useCallback((state: TwitchOauthLoginState & TwitchUserState) => {
+    localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(state));
   }, []);
+
+  // Load manual twitch state from localStorage
+  const loadManualTwitchState = useCallback((): (TwitchOauthLoginState & TwitchUserState) | null => {
+    try {
+      const stored = localStorage.getItem(MANUAL_TWITCH_STATE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Clear manual twitch state
+  const clearManualTwitchState = useCallback(() => {
+    localStorage.removeItem(MANUAL_TWITCH_STATE_KEY);
+    setTwitchState(undefined);
+  }, []);
+
+  // Set manual twitch state
+  const setManualTwitchState = useCallback((manualState: Partial<TwitchOauthLoginState & TwitchUserState>) => {
+    const currentState = twitchState || loadManualTwitchState() || {} as TwitchOauthLoginState & TwitchUserState;
+    const newState = { ...currentState, ...manualState };
+    setTwitchState(newState);
+    saveManualTwitchState(newState);
+  }, [twitchState, loadManualTwitchState, saveManualTwitchState]);
+
+  // Get twitch login state from querystring or localStorage
+  const handleGetTwitchState = useCallback(async () => {
+    // First try to get from OAuth querystring
+    const loginData = getTwitchLoginStateFromQueryString();
+    if (loginData) {
+      const { access_token } = loginData;
+      const userData = await getTwitchUserProfile(client_id, access_token);
+      if (userData) {
+        const fullState = { ...loginData, ...userData };
+        setTwitchState(fullState);
+        saveManualTwitchState(fullState); // Also save to localStorage
+        return;
+      }
+    }
+
+    // If OAuth failed, try to load from localStorage
+    const manualState = loadManualTwitchState();
+    if (manualState) {
+      setTwitchState(manualState);
+    }
+  }, [saveManualTwitchState, loadManualTwitchState]);
 
   useEffect(() => {
     handleGetTwitchState();
@@ -108,6 +149,9 @@ function useTwitchOauth(maxMessage: number = 15) {
 
   return {
     twitchState,
+    setTwitchState,
+    setManualTwitchState,
+    clearManualTwitchState,
     startOauthConnect,
     startWebsocket,
     messages: receivedMsg,

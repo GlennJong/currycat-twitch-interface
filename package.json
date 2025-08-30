@@ -44,11 +44,25 @@
     "files": [
       "dist/**/*",
       "main.js",
+      "preload.js",
       "package.json",
-      "node_modules/**/*"
+      "entitlements.mac.plist"
     ],
     "mac": {
       "category": "public.app-category.utilities",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "此應用程式需要麥克風權限來偵測語音並切換頭像表情。",
+        "NSCameraUsageDescription": "此應用程式需要相機權限來提供完整的多媒體體驗。",
+        "LSUIElement": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "Microphone Access",
+            "CFBundleURLSchemes": ["microphone"]
+          }
+        ]
+      },
       "target": [
         {
           "target": "dmg",

@@ -24,8 +24,28 @@ export function VoiceDetectUtility(params: VoiceDetectUtilityParams = {}) {
     if (isStarted) return
 
     try {
-      audioContext = new window.AudioContext()
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // 檢查瀏覽器支援
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia is not supported in this environment')
+      }
+
+      // 創建 AudioContext
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      
+      // 如果 AudioContext 被暫停，嘗試恢復
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
+
+      // 請求麥克風權限
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      })
+      
       const source = audioContext.createMediaStreamSource(mediaStream)
       analyser = audioContext.createAnalyser()
       source.connect(analyser)
@@ -33,6 +53,7 @@ export function VoiceDetectUtility(params: VoiceDetectUtilityParams = {}) {
       const dataArray = new Uint8Array(analyser.fftSize)
 
       isStarted = true
+      console.log('VoiceDetectUtility started successfully')
 
       timer = window.setInterval(() => {
         if (!analyser) return
@@ -55,6 +76,19 @@ export function VoiceDetectUtility(params: VoiceDetectUtilityParams = {}) {
     } catch (error) {
       console.error('VoiceDetectUtility start failed:', error)
       isStarted = false
+      
+      // 提供更詳細的錯誤信息
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError') {
+          console.error('Microphone permission denied')
+        } else if (error.name === 'NotFoundError') {
+          console.error('No microphone found')
+        } else if (error.name === 'NotSupportedError') {
+          console.error('Microphone not supported')
+        }
+      }
+      
+      throw error
     }
   }
 
