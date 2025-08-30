@@ -53,7 +53,7 @@ const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChan
             defaultValue={color}
             onBlur={handleInputBlur}
             onKeyDown={handleInputKeyDown}
-            style={{ position: 'absolute', top: '20px', left: 0, zIndex: 10 }}
+            style={{ position: 'absolute', top: '20px', left: 0, zIndex: 0, width: '100px', fontSize: '12px' }}
           />
         )}
       </label>

@@ -14,6 +14,8 @@ import ColorPicker from '../../components/ColorPicker/index';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
+  const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
+  const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
   const [ isCatOpen, setIsCatOpen ] = useState(true);
   const [ isDialogueOpen, setIsDialogueOpen ] = useState(false);
   const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
@@ -51,10 +53,10 @@ function MainScreen() {
       leftDown: ['leftdown', '↙', '左下', '下左'],
       rightUp: ['rightup', '↗', '右上', '上右'],
       rightDown: ['rightdown', '↘', '右下', '下右'],
-      left: ['left', '左', '←'],
-      right: ['right', '右', '→'],
-      up: ['up', 'top', '上', '↑'],
-      down: ['down', 'bottom', '下', '↓'],
+      left: ['left', '左', '←', '<'],
+      right: ['right', '右', '→', '>'],
+      up: ['up', 'top', '上', '↑', '^'],
+      down: ['down', 'bottom', '下', '↓', 'v'],
     }
     if (catRef.current) {
       for (const key in direction) {
@@ -72,6 +74,16 @@ function MainScreen() {
       handleDestroyCat();
     }
   }, [isCatOpen])
+
+  useEffect(() => {
+    if (!portraitRef.current || !isPortraitOpen) return;
+    if (isPortraitVoiceDetectOpen) {
+      portraitRef.current?.enableVoice?.();
+    }
+    else {
+      portraitRef.current?.disableVoice?.();
+    }
+  }, [isPortraitVoiceDetectOpen, isPortraitOpen])
 
   useEffect(() => {
     localStorage.setItem('greenScreenColor', greenScreenColor);
@@ -98,6 +110,30 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
+                checked={isPortraitOpen}
+                label="PORTAIT"
+                onChange={(checked) => {
+                  if (!checked) {
+                    portraitRef.current?.disableVoice();
+                    setIsPortraitVoiceDetectOpen(false);
+                  }
+                  setIsPortraitOpen(checked);
+                }}
+              />
+              { isPortraitOpen &&
+                <div>
+                  <Checkbox
+                    theme="light"
+                    checked={isPortraitVoiceDetectOpen}
+                    label="VOICE"
+                    onChange={(checked) => setIsPortraitVoiceDetectOpen(checked)}
+                  />
+                </div>
+              }
+            </div>
+            <div>
+              <Checkbox
+                theme="light"
                 checked={isTodoListOpen}
                 label="TODO LIST"
                 onChange={(checked) => setIsTodoListOpen(checked)}
@@ -106,6 +142,29 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
+                checked={isCatOpen}
+                label="CURRY CAT"
+                onChange={(checked) => setIsCatOpen(checked)}
+              />
+              { isCatOpen &&
+                <div>
+                  {/* <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
+                    <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
+                  </button>
+                  <button className="xs" onClick={() => catRef.current?.up(50)}>
+                    <span style={{ transform: 'rotate(0deg)' }}>▴</span>
+                  </button>
+                  <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
+                    <span style={{ transform: 'rotate(45deg)' }}>▴</span>
+                  </button> */}
+                </div>
+              }
+            </div>
+
+            <div>
+              <Checkbox
+                theme="light"
+                disabled={true}
                 checked={isDialogueOpen}
                 label="DIALOGUE"
                 onChange={(checked) => setIsDialogueOpen(checked)}
@@ -129,27 +188,6 @@ function MainScreen() {
               
             </div>
             <div>
-              <Checkbox
-                theme="light"
-                checked={isCatOpen}
-                label="CURRY CAT"
-                onChange={(checked) => setIsCatOpen(checked)}
-              />
-              { isCatOpen &&
-                <div>
-                  {/* <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
-                    <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
-                  </button>
-                  <button className="xs" onClick={() => catRef.current?.up(50)}>
-                    <span style={{ transform: 'rotate(0deg)' }}>▴</span>
-                  </button>
-                  <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
-                    <span style={{ transform: 'rotate(45deg)' }}>▴</span>
-                  </button> */}
-                </div>
-              }
-            </div>
-            <div>
               <ColorPicker defaultColor={greenScreenColor} onChange={(color) => setGreenScreenColor(color)} />
             </div>
           </div>
@@ -159,9 +197,11 @@ function MainScreen() {
             <TodoList />
           </FreeWindow>
         }
-        <FreeWindow id="portrait" position={{ x: 400, y: 400 }}>
-          <Portrait ref={portraitRef} />
-        </FreeWindow>
+        { isPortraitOpen &&
+          <FreeWindow id="portrait" position={{ x: 400, y: 400 }}>
+            <Portrait ref={portraitRef} />
+          </FreeWindow>
+        }
 
         { isDialogueOpen &&
           <FreeWindow

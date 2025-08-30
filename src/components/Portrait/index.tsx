@@ -1,9 +1,12 @@
 import { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
-import VoiceInputer from "./ws-voice-inputer";
+import { VoiceDetectUtility } from "./voice";
+// import VoiceInputer from "./ws-voice-inputer";
 
 export type PortraitRef = {
   switch: (type?: string) => void;
   reset: () => void;
+  enableVoice: () => void;
+  disableVoice: () => void;
 };
 
 const Portrait = forwardRef(function Portrait(
@@ -13,25 +16,27 @@ const Portrait = forwardRef(function Portrait(
   const containerRef = useRef<HTMLDivElement>(null);
   const typeRef = useRef<string>("normal");
   const idRef = useRef<string>("0");
-  const voiceInputer = useRef<VoiceInputer>(null);
+  const voiceInputer = useRef<ReturnType<typeof VoiceDetectUtility> | null>(null);
 
 
   useEffect(() => {
-    voiceInputer.current = new VoiceInputer({
-      onStart: () => {
-        console.log('VoiceInputer: Recognition started.');
-      },
-      onError: (event) => {
-        console.error('VoiceInputer: Recognition error:', event);
-      },
+    voiceInputer.current = VoiceDetectUtility({
+      // onStart: () => {
+      //   console.log('VoiceInputer: Recognition started.');
+      // },
+      // onError: (event: any) => {
+      //   console.error('VoiceInputer: Recognition error:', event);
+      // },
       onSilence: () => {
+        console.log('slience')
+        handleResetPhoto();
+      },
+      onVoice: () => {
+        console.log('voice')
         handleSwitchPhoto();
       },
-      onSpeak: (transcript) => {
-        console.log('VoiceInputer: Recognition result:', transcript);
-      }
+      threshold: 0.01
     })
-    voiceInputer.current.start();
   }, [])
   
   const handleSwitchPhoto = (type?: string) => {
@@ -55,6 +60,8 @@ const Portrait = forwardRef(function Portrait(
   useImperativeHandle(ref, () => ({
     switch: handleSwitchPhoto,
     reset: handleResetPhoto,
+    enableVoice: voiceInputer.current?.start,
+    disableVoice: voiceInputer.current?.stop
   }));
 
   return (

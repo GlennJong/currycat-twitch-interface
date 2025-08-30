@@ -55,9 +55,17 @@ const TodoList: React.FC = () => {
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => {
-            const event = e as unknown as { isComposing?: boolean; key: string };
-            if (!event.isComposing && event.key === 'Enter') addTodo();
+          onCompositionEnd={() => {
+            // 當組字結束時，不做任何事
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            // 如果正在組字中，不處理任何按鍵
+            if ((e.nativeEvent as any).isComposing) return;
+            
+            // 只有在不是組字狀態，且按下 Enter 時才新增
+            if (e.key === 'Enter') {
+              addTodo();
+            }
           }}
           placeholder="..."
           style={{ flex: 1 }}

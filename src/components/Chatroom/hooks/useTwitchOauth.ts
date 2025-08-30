@@ -76,7 +76,6 @@ function useTwitchOauth(maxMessage: number = 15) {
         if (data.metadata.subscription_type === "channel.chat.message") {
           
           const newMsg = data.payload;
-          console.log({ newMsg })
 
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           onMessage && onMessage(newMsg);

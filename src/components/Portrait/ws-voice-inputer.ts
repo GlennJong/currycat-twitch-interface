@@ -13,25 +13,46 @@ export class VoiceInputer {
   private onSpeak?: (payload: any) => void;
   private onSilence?: () => void;
   private ws: WebSocket | null;
+  private password: string;
 
-  constructor({ onStart, onStop, onError, onSpeak, onSilence }: VoiceInputerEvents) {
+  constructor({ onStart, onStop, onError, onSpeak, onSilence }: VoiceInputerEvents, password: string) {
     this.onStart = onStart;
     this.onStop = onStop;
     this.onError = onError;
     this.onSpeak = onSpeak;
     this.onSilence = onSilence;
     this.ws = null;
+    this.password = password;
   }
 
   start() {
     this.ws = new WebSocket('ws://localhost:4455');
 
     this.ws.onopen = () => {
+      // Authenticate with the server
+      this.ws?.send(JSON.stringify({
+        'request-type': 'Authenticate',
+        'auth': this.password,
+        'message-id': 'auth',
+      }));
+
       if (this.onStart) this.onStart();
     };
 
-    this.ws.onmessage = (message: MessageEvent) => {
+    this.ws.onmessage = async (message: MessageEvent) => {
       const data = JSON.parse(message.data);
+
+      
+      if (data['message-id'] === 'auth') {
+        if (data.status === 'ok') {
+          console.log('Authentication successful');
+        } else {
+          console.error('Authentication failed:', data.error);
+          this.ws?.close();
+          return;
+        }
+      }
+
       switch (data.event) {
         case 'speak':
           if (this.onSpeak) this.onSpeak(data.payload);

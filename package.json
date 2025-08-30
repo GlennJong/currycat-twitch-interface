@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "serve": "vite --config vite.config.ts serve ./dist",
-    "start": "electron ."
+    "start": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "electron:build": "yarn build && electron-builder",
+    "electron:dist": "yarn build && electron-builder --publish=never"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -22,6 +25,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^26.0.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -30,5 +34,43 @@
     "typescript-eslint": "^8.26.1",
     "vite": "^6.3.1"
   },
-  "main": "main.js"
+  "main": "main.js",
+  "build": {
+    "appId": "com.currycat.twitch-interface",
+    "productName": "CurryCat Twitch Interface",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    }
+  }
 }

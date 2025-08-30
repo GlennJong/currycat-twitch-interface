@@ -172,30 +172,29 @@ class Cat {
     this.cat.style.left = this.x + 'px';
     this.cat.style.top = this.y + 'px';
 
-    // 碰撞檢測
-    const catRect = this.cat.getBoundingClientRect();
-    const itemRect = this.item.getBoundingClientRect();
-
-    if (
-      catRect.left < itemRect.right &&
-      catRect.right > itemRect.left &&
-      catRect.top < itemRect.bottom &&
-      catRect.bottom > itemRect.top
-    ) {
-      await this.handleCollision();
-    }
-
-    // 200ms 後回復靜止狀態
+    // 等待移動動畫結束後再檢查碰撞
     await new Promise((resolve) => {
-      this.idleTimeout = window.setTimeout(() => {
+      const onTransitionEnd = async () => {
+        this.cat.removeEventListener('transitionend', onTransitionEnd);
+        // 檢查碰撞
+        const catRect = this.cat.getBoundingClientRect();
+        const itemRect = this.item.getBoundingClientRect();
+        if (
+          catRect.left < itemRect.right &&
+          catRect.right > itemRect.left &&
+          catRect.top < itemRect.bottom &&
+          catRect.bottom > itemRect.top
+        ) {
+          await this.handleCollision();
+        }
+        // 回復靜止狀態
         this.setState('stop');
         this.stopRunningAnimation();
-
         // 恢復靜止狀態的背景幀
         this.cat.style.backgroundPosition = `-${stopFrame[0] * CAT_SIZE}px -${stopFrame[1] * CAT_SIZE}px`;
-
         resolve(null);
-      }, MOVING_DURATION);
+      };
+      this.cat.addEventListener('transitionend', onTransitionEnd);
     });
   }
 
