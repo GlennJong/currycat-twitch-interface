@@ -20,7 +20,6 @@ function App() {
   const [ id, setId ] = useState<string>();
 
   useEffect(() => {
-    navigator.wakeLock.request();
     const urlParams = new URLSearchParams(window.location.search);
     const value = urlParams.get('as_id');
     if (value) {
