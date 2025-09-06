@@ -33,6 +33,7 @@ class Cat {
   private idleTimer: number = 0;
   private animationInterval: number | null = null;
   private lastHorizontalDirection: 'left' | 'right' = 'left';
+  private isColliding: boolean = false;
 
   constructor(x?: number, y?: number) {
     // 若未提供 x, y，則預設在視窗正中央
@@ -76,7 +77,7 @@ class Cat {
     this.setState('stop');
 
     // 綁定 mousedown 事件
-    document.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    // document.addEventListener('mousedown', this.handleMouseDown.bind(this));
   }
 
   private setState(newState: 'stop' | 'idle' | 'running' | 'touching'): void {
@@ -98,6 +99,7 @@ class Cat {
   }
 
   private async handleCollision(): Promise<void> {
+    this.isColliding = true;
     this.setState('touching');
 
     // 計算 item 的相對方向
@@ -122,6 +124,7 @@ class Cat {
     this.moveItem();
 
     this.setState('stop');
+    this.isColliding = false;
   }
 
   private startRunningAnimation(frames: [number, number][], interval: number): void {
@@ -146,6 +149,7 @@ class Cat {
   }
 
   private async move(dx: number, dy: number, direction: string): Promise<void> {
+    if (this.isColliding) return;
     clearTimeout(this.idleTimeout);
     this.setState('running');
 
@@ -230,16 +234,16 @@ class Cat {
     clearInterval(animationInterval);
   }
 
-  private handleMouseDown(event: MouseEvent): void {
-    const targetX = event.clientX - CAT_SIZE / 2;
-    const targetY = event.clientY - CAT_SIZE / 2;
+  // private handleMouseDown(event: MouseEvent): void {
+  //   const targetX = event.clientX - CAT_SIZE / 2;
+  //   const targetY = event.clientY - CAT_SIZE / 2;
 
-    const dx = targetX - this.x;
-    const dy = targetY - this.y;
+  //   const dx = targetX - this.x;
+  //   const dy = targetY - this.y;
 
-    const direction = this.calculateDirection(dx, dy);
-    this.move(dx, dy, direction);
-  }
+  //   const direction = this.calculateDirection(dx, dy);
+  //   this.move(dx, dy, direction);
+  // }
 
   private calculateDirection(dx: number, dy: number): string {
     if (Math.abs(dx) > Math.abs(dy)) {
@@ -251,27 +255,35 @@ class Cat {
 
   // 8 個方向的移動方法
   left(distance: number): void {
+    if (this.isColliding) return;
     this.move(-distance, 0, 'left');
   }
   right(distance: number): void {
+    if (this.isColliding) return;
     this.move(distance, 0, 'right');
   }
   up(distance: number): void {
+    if (this.isColliding) return;
     this.move(0, -distance, 'up');
   }
   down(distance: number): void {
+    if (this.isColliding) return;
     this.move(0, distance, 'down');
   }
   leftUp(distance: number): void {
+    if (this.isColliding) return;
     this.move(-distance, -distance, 'left-up');
   }
   rightUp(distance: number): void {
+    if (this.isColliding) return;
     this.move(distance, -distance, 'right-up');
   }
   leftDown(distance: number): void {
+    if (this.isColliding) return;
     this.move(-distance, distance, 'left-down');
   }
   rightDown(distance: number): void {
+    if (this.isColliding) return;
     this.move(distance, distance, 'right-down');
   }
 
@@ -280,6 +292,41 @@ class Cat {
     clearTimeout(this.idleTimer);
     this.cat.remove();
     this.item.remove();
+  }
+
+  /**
+   * 每次執行，朝 item 方向移動 step px
+   */
+  moveToward(step: number = 30): void {
+    if (this.isColliding) return;
+    const itemRect = this.item.getBoundingClientRect();
+    const catRect = this.cat.getBoundingClientRect();
+    const itemCenterX = itemRect.left + itemRect.width / 2;
+    const itemCenterY = itemRect.top + itemRect.height / 2;
+    const catCenterX = catRect.left + catRect.width / 2;
+    const catCenterY = catRect.top + catRect.height / 2;
+
+    const dx = itemCenterX - catCenterX;
+    const dy = itemCenterY - catCenterY;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    if (length === 0) return; // 已經重疊
+
+    const moveX = (dx / length) * step;
+    const moveY = (dy / length) * step;
+    const direction = this.calculateDirection(moveX, moveY);
+    this.move(moveX, moveY, direction);
+  }
+
+  /**
+   * 每次執行，朝隨機方向移動 step px
+   */
+  moveRandom(step: number = 30): void {
+    if (this.isColliding) return;
+    const angle = Math.random() * 2 * Math.PI;
+    const moveX = Math.cos(angle) * step;
+    const moveY = Math.sin(angle) * step;
+    const direction = this.calculateDirection(moveX, moveY);
+    this.move(moveX, moveY, direction);
   }
 }
 

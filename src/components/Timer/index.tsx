@@ -13,10 +13,51 @@ const Timer: React.FC = () => {
     return now.toISOString().slice(11, 16); // 提取 hh:mm 格式
   };
 
-  const [inputTime, setInputTime] = useState(getDefaultInputTime()); // 預設值改為當前時間 + 1 小時
-  const [duration, setDuration] = useState(60); // 總秒數
-  const [remaining, setRemaining] = useState<number | null>(null); // null 表示尚未開始
+  // 嘗試從 localStorage 恢復狀態
+  const getInitialState = () => {
+    try {
+      const saved = localStorage.getItem('timer-state');
+      if (saved) {
+        const { inputTime, duration, remaining, savedAt } = JSON.parse(saved);
+        // 若有剩餘時間，計算經過的秒數
+        if (remaining !== null && savedAt) {
+          const elapsed = Math.floor((Date.now() - savedAt) / 1000);
+          const newRemaining = Math.max(remaining - elapsed, 0);
+          return {
+            inputTime: inputTime || getDefaultInputTime(),
+            duration: duration || 60,
+            remaining: newRemaining > 0 ? newRemaining : null,
+          };
+        }
+        return {
+          inputTime: inputTime || getDefaultInputTime(),
+          duration: duration || 60,
+          remaining: null,
+        };
+      }
+    } catch {
+      // ignore parse error
+    }
+    return {
+      inputTime: getDefaultInputTime(),
+      duration: 60,
+      remaining: null,
+    };
+  };
+
+  const [inputTime, setInputTime] = useState(getInitialState().inputTime);
+  const [duration, setDuration] = useState(getInitialState().duration);
+  const [remaining, setRemaining] = useState<number | null>(getInitialState().remaining);
   const [dragging, setDragging] = useState(false);
+  // 狀態變動時儲存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('timer-state', JSON.stringify({
+      inputTime,
+      duration,
+      remaining,
+      savedAt: Date.now(),
+    }));
+  }, [inputTime, duration, remaining]);
 
   // 倒數計時
   useEffect(() => {

@@ -47,25 +47,36 @@ function MainScreen() {
     }
   }
 
-  const handleControlCat = (msg: string) => {
-    const direction = {
-      leftUp: ['leftup', '↖', '左上', '上左'],
-      leftDown: ['leftdown', '↙', '左下', '下左'],
-      rightUp: ['rightup', '↗', '右上', '上右'],
-      rightDown: ['rightdown', '↘', '右下', '下右'],
-      left: ['left', '左', '←', '<'],
-      right: ['right', '右', '→', '>'],
-      up: ['up', 'top', '上', '↑', '^'],
-      down: ['down', 'bottom', '下', '↓', 'v'],
-    }
+  // 隨機讓貓移動到 item 或隨機方向
+  const handleMoveCat = () => {
     if (catRef.current) {
-      for (const key in direction) {
-        if (direction[key as keyof typeof direction].some((word: string) => msg.includes(word))) {
-          (catRef.current as any)[key](20 + Math.floor(Math.random() * 10));
-        }
+      if (Math.random() < 0.5) {
+        catRef.current.moveToward();
+      } else {
+        catRef.current.moveRandom();
       }
     }
   }
+  
+  // const handleControlCat = (msg: string) => {
+  //   const direction = {
+  //     leftUp: ['leftup', '↖', '左上', '上左'],
+  //     leftDown: ['leftdown', '↙', '左下', '下左'],
+  //     rightUp: ['rightup', '↗', '右上', '上右'],
+  //     rightDown: ['rightdown', '↘', '右下', '下右'],
+  //     left: ['left', '左', '←', '<'],
+  //     right: ['right', '右', '→', '>'],
+  //     up: ['up', 'top', '上', '↑', '^'],
+  //     down: ['down', 'bottom', '下', '↓', 'v'],
+  //   }
+  //   if (catRef.current) {
+  //     for (const key in direction) {
+  //       if (direction[key as keyof typeof direction].some((word: string) => msg.includes(word))) {
+  //         (catRef.current as any)[key](20 + Math.floor(Math.random() * 10));
+  //       }
+  //     }
+  //   }
+  // }
   
   useEffect(() => {
     if (isCatOpen) {
@@ -100,7 +111,7 @@ function MainScreen() {
           </div>
           <div className="side">
             <Window>
-              <Chatroom onInput={handleControlCat} />
+              <Chatroom onInput={handleMoveCat} />
             </Window>
           </div>
 
