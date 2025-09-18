@@ -1,0 +1,43 @@
+name: Deploy My Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false 
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+        env:
+          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_TWITCH_CLIENT_ID: ${{ secrets.VITE_TWITCH_CLIENT_ID }}
+          VITE_TWITCH_OAUTH_REDIRECT_URI: ${{ secret.VITE_TWITCH_OAUTH_REDIRECT_URI }}
+          VITE_TWITCH_ACCESS_TOKEN: ${{ secret.VITE_TWITCH_ACCESS_TOKEN }}
+          VITE_TWITCH_ID: ${{ secret.VITE_TWITCH_ID }}
+          VITE_LOGIN: ${{ secret.VITE_LOGIN }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
