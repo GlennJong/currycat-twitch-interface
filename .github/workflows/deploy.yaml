@@ -31,10 +31,10 @@ jobs:
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
           VITE_TWITCH_CLIENT_ID: ${{ secrets.VITE_TWITCH_CLIENT_ID }}
-          VITE_TWITCH_OAUTH_REDIRECT_URI: ${{ secret.VITE_TWITCH_OAUTH_REDIRECT_URI }}
-          VITE_TWITCH_ACCESS_TOKEN: ${{ secret.VITE_TWITCH_ACCESS_TOKEN }}
-          VITE_TWITCH_ID: ${{ secret.VITE_TWITCH_ID }}
-          VITE_LOGIN: ${{ secret.VITE_LOGIN }}
+          VITE_TWITCH_OAUTH_REDIRECT_URI: ${{ secrets.VITE_TWITCH_OAUTH_REDIRECT_URI }}
+          VITE_TWITCH_ACCESS_TOKEN: ${{ secrets.VITE_TWITCH_ACCESS_TOKEN }}
+          VITE_TWITCH_ID: ${{ secrets.VITE_TWITCH_ID }}
+          VITE_LOGIN: ${{ secrets.VITE_LOGIN }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
