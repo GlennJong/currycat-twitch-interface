@@ -13,15 +13,5 @@ export default defineConfig({
         alias: {
           "@": path.resolve(__dirname, "./src"),
         }
-    },
-    server: {
-        // https: true,
-        host: true,
-        port: 8000,
-    },
-    preview: {
-        // https: true,
-        host: true,
-        port: 8000,
-    } ,
+    }
 })
