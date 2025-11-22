@@ -175,7 +175,7 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
-                disabled={true}
+                // disabled={true}
                 checked={isDialogueOpen}
                 label="DIALOGUE"
                 onChange={(checked) => setIsDialogueOpen(checked)}
