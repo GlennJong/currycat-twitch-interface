@@ -15,6 +15,7 @@
     "electron:dist": "yarn build && electron-builder --publish=never"
   },
   "dependencies": {
+    "@glennjong/pixel-window": "^0.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -59,14 +60,19 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLName": "Microphone Access",
-            "CFBundleURLSchemes": ["microphone"]
+            "CFBundleURLSchemes": [
+              "microphone"
+            ]
           }
         ]
       },
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     },
@@ -74,7 +80,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -82,7 +90,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     }

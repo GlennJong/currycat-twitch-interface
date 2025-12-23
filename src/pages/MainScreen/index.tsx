@@ -5,12 +5,10 @@ import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
 import Portrait, { PortraitRef } from '@/components/Portrait';
-import FreeWindow from '@/components/FreeWindow/index';
-import Window from '@/components/Window';
+import { FreePixelWindow } from '@glennjong/pixel-window';
 import Checkbox from '@/components/Checkbox/index';
 import { Color } from '@/constants';
 import Dialogue from '@/components/Dialogue';
-import ColorPicker from '../../components/ColorPicker/index';
 
 function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
@@ -21,10 +19,7 @@ function MainScreen() {
   const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
   const [ isDialogueShow, setIsDialogueShow ] = useState(false);
   const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
-  const [ greenScreenColor, setGreenScreenColor ] = useState<string>(() => {
-    const storedColor = localStorage.getItem('greenScreenColor');
-    return storedColor ? storedColor : Color.BlackLight;
-  });
+  
   const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
 
@@ -47,36 +42,15 @@ function MainScreen() {
     }
   }
 
-  // 隨機讓貓移動到 item 或隨機方向
   const handleMoveCat = () => {
     if (catRef.current) {
-      if (Math.random() < 0.5) {
-        catRef.current.moveToward();
+      if (Math.random() < 0.8) {
+        catRef.current.moveToward(120);
       } else {
         catRef.current.moveRandom();
       }
     }
   }
-  
-  // const handleControlCat = (msg: string) => {
-  //   const direction = {
-  //     leftUp: ['leftup', '↖', '左上', '上左'],
-  //     leftDown: ['leftdown', '↙', '左下', '下左'],
-  //     rightUp: ['rightup', '↗', '右上', '上右'],
-  //     rightDown: ['rightdown', '↘', '右下', '下右'],
-  //     left: ['left', '左', '←', '<'],
-  //     right: ['right', '右', '→', '>'],
-  //     up: ['up', 'top', '上', '↑', '^'],
-  //     down: ['down', 'bottom', '下', '↓', 'v'],
-  //   }
-  //   if (catRef.current) {
-  //     for (const key in direction) {
-  //       if (direction[key as keyof typeof direction].some((word: string) => msg.includes(word))) {
-  //         (catRef.current as any)[key](20 + Math.floor(Math.random() * 10));
-  //       }
-  //     }
-  //   }
-  // }
   
   useEffect(() => {
     if (isCatOpen) {
@@ -95,10 +69,6 @@ function MainScreen() {
       portraitRef.current?.disableVoice?.();
     }
   }, [isPortraitVoiceDetectOpen, isPortraitOpen])
-
-  useEffect(() => {
-    localStorage.setItem('greenScreenColor', greenScreenColor);
-  }, [greenScreenColor]);
   
   return (
     <>
@@ -106,13 +76,20 @@ function MainScreen() {
         <div className="top">
           <Timer />
         </div>
-        <div className="center" style={{ backgroundColor: greenScreenColor }}>
+        <div className="center">
           <div className="main">
           </div>
           <div className="side">
-            <Window>
+            <FreePixelWindow
+              name="chatroom"
+              position={{ x: 400, y: 400 }}
+              pixel={32}
+              stroke={Color.BlackDark}
+              frame={Color.WhiteLight}
+              background={Color.WhiteLight}
+            >
               <Chatroom onInput={handleMoveCat} />
-            </Window>
+            </FreePixelWindow>
           </div>
 
         </div>
@@ -157,19 +134,6 @@ function MainScreen() {
                 label="CURRY CAT"
                 onChange={(checked) => setIsCatOpen(checked)}
               />
-              { isCatOpen &&
-                <div>
-                  {/* <button className="xs" onClick={() => catRef.current?.leftUp(50)}>
-                    <span style={{ transform: 'rotate(-45deg)' }}>▴</span>
-                  </button>
-                  <button className="xs" onClick={() => catRef.current?.up(50)}>
-                    <span style={{ transform: 'rotate(0deg)' }}>▴</span>
-                  </button>
-                  <button className="xs" onClick={() => catRef.current?.rightUp(50)}>
-                    <span style={{ transform: 'rotate(45deg)' }}>▴</span>
-                  </button> */}
-                </div>
-              }
             </div>
 
             <div>
@@ -196,29 +160,46 @@ function MainScreen() {
                   onChange={(checked) => setDialogueLanguage(checked ? 'zh-TW' : 'en')}
                 />
               }
-              
-            </div>
-            <div>
-              <ColorPicker defaultColor={greenScreenColor} onChange={(color) => setGreenScreenColor(color)} />
             </div>
           </div>
         </div>
         { isTodoListOpen &&
-          <FreeWindow id="todolist" position={{ x: 400, y: 400 }}>
+          <FreePixelWindow
+            name="todolist"
+            position={{ x: 400, y: 400 }}
+            pixel={32}
+            stroke={Color.BlackDark}
+            frame={Color.WhiteLight}
+            background={Color.WhiteLight}
+          >
             <TodoList />
-          </FreeWindow>
+          </FreePixelWindow>
         }
         { isPortraitOpen &&
-          <FreeWindow id="portrait" position={{ x: 400, y: 400 }}>
+          <FreePixelWindow
+            name="portrait"
+            position={{ x: 400, y: 400 }}
+            pixel={32}
+            stroke={Color.BlackDark}
+            frame={Color.WhiteLight}
+            background={Color.WhiteLight}
+            style={{
+              margin: '-10px',
+            }}
+          >
             <Portrait ref={portraitRef} />
-          </FreeWindow>
+          </FreePixelWindow>
         }
 
         { isDialogueOpen &&
-          <FreeWindow
-            id="dialogue"
+          <FreePixelWindow
+            name="dialogue"
             style={{ display: (isDialogueForceHide || !isDialogueShow) ? 'none' : 'block' }}
             position={{ x: 400, y: 400 }}
+            pixel={32}
+            stroke={Color.BlackDark}
+            frame={Color.WhiteLight}
+            background={Color.WhiteLight}
           >
             <Dialogue
               style={{ padding: '12px', fontSize: '30px' }}
@@ -237,7 +218,7 @@ function MainScreen() {
                 setIsDialogueShow(false);
               }}
             />
-          </FreeWindow>
+          </FreePixelWindow>
         }
       </div>
     </>

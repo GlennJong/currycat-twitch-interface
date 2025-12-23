@@ -17,6 +17,7 @@ const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChan
 
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
+    console.log({inputValue})
     const hexRegex = /^#([0-9A-Fa-f]{3}){1,2}$/;
     if (hexRegex.test(inputValue)) {
       setColor(inputValue);

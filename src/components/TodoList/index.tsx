@@ -54,6 +54,9 @@ const TodoList: React.FC = () => {
         <input
           type="text"
           value={input}
+          autoFocus={true}
+          tabIndex={1}
+          spellCheck="true"
           onChange={e => setInput(e.target.value)}
           onCompositionEnd={() => {
             // 當組字結束時，不做任何事

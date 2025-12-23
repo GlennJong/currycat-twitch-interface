@@ -10,7 +10,7 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: 'BoutiqueBitmap', sans-serif;
-  background-color: var(--color-blackdark);
+  background-color: #000;
   color: var(--color-blackdark);
 }
 

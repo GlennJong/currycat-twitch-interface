@@ -11,8 +11,7 @@ function getFrame({ size, stroke, frame, background }: { size: number; stroke: s
 
   // Encode SVG to Base64 safely
   const encodedSvg = encodeURIComponent(svg)
-    .replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16)))
-    .replace(/#/g, '%23');
+    .replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16)));
 
   return `data:image/svg+xml;base64,${btoa(encodedSvg)}`;
 }
