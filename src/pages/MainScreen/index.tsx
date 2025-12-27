@@ -87,6 +87,10 @@ function MainScreen() {
               stroke={Color.BlackDark}
               frame={Color.WhiteLight}
               background={Color.WhiteLight}
+              style={{
+                position: 'relative',
+                height: '320px'
+              }}
             >
               <Chatroom onInput={handleMoveCat} />
             </FreePixelWindow>

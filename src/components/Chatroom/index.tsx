@@ -46,7 +46,7 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
       {twitchState ? (
         <div
-          style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%'}}>
+          style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflowY: 'auto'}}>
           <div style={{ textAlign: 'center', flexShrink: 0, marginBottom: '8px' }}>
             { !isSyncisSyncing &&
               <div style={{ 

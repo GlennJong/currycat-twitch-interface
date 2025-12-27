@@ -17,5 +17,6 @@
 }
 .chat-line .chat-emote {
   display: block;
-  width: 20px;
+  width: 56px;
+  height: 56px;
 }
