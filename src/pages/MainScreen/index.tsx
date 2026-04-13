@@ -5,9 +5,9 @@ import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
 // import Portrait, { PortraitRef } from '@/components/Portrait';
-import { FreePixelWindow } from '@glennjong/pixel-window';
+// import { FreePixelWindow } from '@glennjong/pixel-window';
 import Checkbox from '@/components/Checkbox/index';
-import { Color } from '@/constants';
+// import { Color } from '@/constants';
 // import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
