@@ -1,11 +1,5 @@
-// 徽章的型別保持不變
-// interface TwitchBadge {
-//     set_id: string;
-//     id: string;
-//     info: string;
-// }
+import { BadgeMap, TwitchChatEntry } from "../hooks/types";
 
-// 表情符號的型別保持不變
 interface TwitchEmote {
     id: string;
     emote_set_id: string;
@@ -13,7 +7,6 @@ interface TwitchEmote {
     format: string[];
 }
 
-// 訊息片段的型別保持不變
 interface TwitchFragment {
     type: 'text' | 'emote' | 'mention' | 'cheermote';
     text: string;
@@ -22,85 +15,142 @@ interface TwitchFragment {
     mention: any | null;
 }
 
-// 訊息內容的型別保持不變
-// interface TwitchMessage {
-//     text: string;
-//     fragments: TwitchFragment[];
-// }
+/** 跳脫 HTML 特殊字元，防止 XSS 注入 */
+const escapeHtml = (input: unknown): string =>
+    String(input ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
 
-// 完整的 Event 物件型別
-// interface TwitchEvent {
-//     broadcaster_user_id: string;
-//     broadcaster_user_login: string;
-//     broadcaster_user_name: string;
-//     chatter_user_id: string;
-//     chatter_user_login: string;
-//     chatter_user_name: string;
-//     message: TwitchMessage;
-//     color: string;
-//     badges: TwitchBadge[];
-//     source_badges: TwitchBadge[] | null;
-//     // 其他欄位...
-// }
-
-// 完整的 WebSocket Payload 型別
-// interface TwitchWebSocketPayload {
-//     subscription: any; // 簡化處理
-//     event: TwitchEvent;
-// }
-
+/** 僅允許合法的 CSS 顏色值（hex / rgb / rgba），防止樣式注入 */
+const sanitizeColor = (color: unknown): string => {
+    const s = String(color ?? '').trim();
+    if (
+        /^#[0-9a-fA-F]{3,8}$/.test(s) ||
+        /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(s) ||
+        /^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/.test(s)
+    ) {
+        return s;
+    }
+    return '#FFFFFF';
+};
 
 /**
- * 轉換 Twitch 聊天訊息 Event 為 HTML 字串。
- *
- * @param {TwitchEvent} event - 包含聊天訊息所有細節的 Event 物件。
- * @returns {string} - 包含完整樣式的聊天訊息 HTML 字串。
+ * 確保顏色在深色背板上可辨識：若感知亮度太低則向白色提亮。
+ * 僅處理 6 位 hex 顏色（#rrggbb）。
  */
-export const twitchMessageConverter = (event: any): string => {
-    // 僅移除 <script> 標籤（大小寫不敏感），不影響其他標籤
-    const stripScriptTags = (input: string): string => {
-        let s = String(input);
-        s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ''); // 移除成對的 <script>...</script>
-        s = s.replace(/<script\b[^>]*\/>/gi, ''); // 移除自閉合的 <script/>
-        s = s.replace(/<\/script>/gi, ''); // 防止殘留的關閉標籤
-        return s;
-    };
-    // 1. 處理使用者名稱和顏色
-    // 使用 chatter_user_name 作為顯示名稱
-    const userDisplayName: string = event.chatter_user_name;
-    const userColor: string = event.color || '#FFFFFF'; // 如果沒有顏色，預設為白色
-    const usernameHtml: string = `<span class="chat-username" style="color: ${userColor};">${userDisplayName}：</span>`;
+const ensureReadableOnDark = (color: string): string => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return color;
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    // ITU-R BT.601 perceived luminance (0–1)
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (lum >= 0.25) return color;
+    // 亮度不足：混合 60% 白色提亮
+    const blend = (c: number) =>
+        Math.min(255, Math.round(c + (255 - c) * 0.6))
+            .toString(16).padStart(2, '0');
+    return `#${blend(r)}${blend(g)}${blend(b)}`;
+};
 
-    // 2. 處理徽章 (Badges)
-    // let badgesHtml: string = '';
-    // const badges: TwitchBadge[] = event.badges || [];
-    
-    // badges.forEach(badge => {
-    //     const badgeUrl: string = `https://static-cdn.jtvnw.net/badges/v1/${badge.set_id}/${badge.id}/1`;
-    //     badgesHtml += `<img src="${badgeUrl}" class="chat-badge" alt="${badge.set_id}" />`;
-    // });
+// ---------------------------------------------------------------------------
+// Chat message renderer
+// ---------------------------------------------------------------------------
+const renderChatMessage = (event: any, badgeMap: BadgeMap): string => {
+    const rawColor = sanitizeColor(event.color);
+    const userColor = ensureReadableOnDark(rawColor);
+    const userDisplayName = escapeHtml(
+        event.chatter_user_name || event.chatter_user_login || 'Unknown'
+    );
 
-    // 3. 處理訊息內容 (包含表情符號)
-    let messageContentHtml: string = '';
-    const fragments: TwitchFragment[] = event.message.fragments || [];
-
-    fragments.forEach(fragment => {
-        if (fragment.type === 'text') {
-            messageContentHtml += stripScriptTags(String(fragment.text ?? ''));
-        } else if (fragment.type === 'emote' && fragment.emote) {
-            const emoteId: string = fragment.emote.id;
-            const emoteAlt: string = stripScriptTags(String(fragment.text ?? ''));
-            // 這裡的版本可以根據你的需求調整
-            const emoteUrl: string = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-            messageContentHtml += `<img src="${emoteUrl}" alt="${emoteAlt}" class="chat-emote" />`;
+    // Badges — look up image URL from the fetched badge map
+    let badgesHtml = '';
+    const badges: { set_id: string; id: string; info: string }[] = event.badges || [];
+    badges.forEach(badge => {
+        const key = `${badge.set_id}/${badge.id}`;
+        const imgUrl = badgeMap[key];
+        if (imgUrl) {
+            const alt = escapeHtml(badge.set_id);
+            badgesHtml += `<img src="${escapeHtml(imgUrl)}" class="chat-badge" alt="${alt}" />`;
         }
     });
 
-    // 4. 將所有部分組合起來
+    // Channel-points redemption indicator on this chat message
+    let rewardHtml = '';
+    if (event.channel_points_custom_reward_id) {
+        rewardHtml = `<span class="chat-reward" title="Channel Points Redemption">&#127873;</span>`;
+    } else if (event.message_type === 'channel_points_highlighted') {
+        rewardHtml = `<span class="chat-reward chat-reward--highlight" title="Highlighted Message">&#11088;</span>`;
+    }
+
+    // Message fragments
+    let messageContentHtml = '';
+    const fragments: TwitchFragment[] = event.message?.fragments || [];
+    fragments.forEach(fragment => {
+        if (fragment.type === 'text') {
+            messageContentHtml += escapeHtml(fragment.text ?? '');
+        } else if (fragment.type === 'emote' && fragment.emote) {
+            const emoteId = encodeURIComponent(fragment.emote.id);
+            const emoteAlt = escapeHtml(fragment.text ?? '');
+            const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+            messageContentHtml += `<img src="${emoteUrl}" alt="${emoteAlt}" class="chat-emote" />`;
+        } else if (fragment.type === 'mention') {
+            messageContentHtml += `<span class="chat-mention">${escapeHtml(fragment.text ?? '')}</span>`;
+        } else if (fragment.type === 'cheermote') {
+            messageContentHtml += escapeHtml(fragment.text ?? '');
+        }
+    });
+
     return `
         <div class="chat-line">
-            ${usernameHtml}
+            <div class="chat-header">
+                ${badgesHtml}${rewardHtml}
+                <span class="chat-username" style="color: ${userColor};">${userDisplayName}：</span>
+            </div>
             <span class="chat-message">${messageContentHtml}</span>
         </div>
     `;
+};
+
+// ---------------------------------------------------------------------------
+// Channel-points redemption renderer (no chat message attached)
+// ---------------------------------------------------------------------------
+const renderRedemption = (event: any): string => {
+    const userName = escapeHtml(event.user_name || event.user_login || 'Unknown');
+    const rewardTitle = escapeHtml(event.reward?.title ?? 'Reward');
+    const cost = Number(event.reward?.cost ?? 0).toLocaleString();
+    const userInput = event.user_input
+        ? `<span class="chat-message">${escapeHtml(event.user_input)}</span>`
+        : '';
+
+    return `
+        <div class="chat-line chat-line--redemption">
+            <div class="chat-header">
+                <span class="chat-reward" title="Channel Points Redemption">&#127873;</span>
+                <span class="chat-username chat-username--redemption">${userName}</span>
+                <span class="chat-reward-label">兌換了 <b>${rewardTitle}</b>（${cost} 點）</span>
+            </div>
+            ${userInput}
+        </div>
+    `;
+};
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * 將 TwitchChatEntry 轉換為聊天室 HTML 字串。
+ */
+export const twitchMessageConverter = (
+    entry: TwitchChatEntry,
+    badgeMap: BadgeMap = {},
+): string => {
+    if (entry.type === 'redemption') {
+        return renderRedemption(entry.event);
+    }
+    return renderChatMessage(entry.event, badgeMap);
 };

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  fetchBadges,
   getTwitchLoginStateFromQueryString,
   getTwitchUserProfile,
   openTwitchOauthLogin,
+  subscribeChannelPointsForWs,
   subscribeMessageForWs
 } from "./methods";
 import { TWITCH_WS_URL } from "./constants";
-import { TwitchOauthLoginState, TwitchUserState, TwitchWsMessagePayload } from "./types";
+import { BadgeMap, TwitchChatEntry, TwitchOauthLoginState, TwitchUserState, TwitchWsMessagePayload } from "./types";
 
 // localStorage key for manual twitch state
 const MANUAL_TWITCH_STATE_KEY = "manual_twitch_state";
@@ -26,10 +28,11 @@ type WsEventHandler<T> =
 
 function useTwitchOauth(maxMessage: number = 15) {
   const [twitchState, setTwitchState] = useState<TwitchOauthLoginState & TwitchUserState>();
-  const [receivedMsg, setReceivedMsg] = useState<TwitchWsMessagePayload[]>([]);
+  const [receivedMsg, setReceivedMsg] = useState<TwitchChatEntry[]>([]);
+  const [badgeMap, setBadgeMap] = useState<BadgeMap>({});
   console.log('twitchState', twitchState)
-  
-  const receivedMsgRef = useRef<TwitchWsMessagePayload[]>([]);
+
+  const receivedMsgRef = useRef<TwitchChatEntry[]>([]);
   const websocketRef = useRef<WebSocket>(null);
   const isWsConnectedRef = useRef<boolean>(false);
 
@@ -112,30 +115,43 @@ function useTwitchOauth(maxMessage: number = 15) {
       const data = JSON.parse(event.data);
 
       if (isWsConnectedRef.current) {
-        // channel.read.redemptions
-        // channel.chat.message
-        if (data.metadata.subscription_type === "channel.chat.message") {
-          
-          const newMsg = data.payload;
+        const subType: string = data.metadata?.subscription_type ?? '';
 
+        if (subType === "channel.chat.message") {
+          const entry: TwitchChatEntry = {
+            id: data.payload.event.message_id,
+            type: 'chat',
+            event: data.payload.event,
+          };
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          onMessage && onMessage(newMsg);
+          onMessage && onMessage(data.payload);
           receivedMsgRef.current = [
-            ...receivedMsgRef.current.slice(-maxMessage + 1), // 保留最多 maxMessage 條訊息
-            newMsg,
+            ...receivedMsgRef.current.slice(-maxMessage + 1),
+            entry,
+          ];
+          setReceivedMsg([...receivedMsgRef.current]);
+        } else if (subType === "channel.channel_points_custom_reward_redemption.add") {
+          const entry: TwitchChatEntry = {
+            id: data.payload.event.id,
+            type: 'redemption',
+            event: data.payload.event,
+          };
+          receivedMsgRef.current = [
+            ...receivedMsgRef.current.slice(-maxMessage + 1),
+            entry,
           ];
           setReceivedMsg([...receivedMsgRef.current]);
         }
       } else {
         const session_id = data.payload.session.id;
-        const isSubscribeSuccess = await subscribeMessageForWs(
-          session_id,
-          client_id,
-          access_token,
-          id,
-        );
-        if (isSubscribeSuccess) {
+        const [chatOk] = await Promise.all([
+          subscribeMessageForWs(session_id, client_id, access_token, id),
+          subscribeChannelPointsForWs(session_id, client_id, access_token, id),
+        ]);
+        if (chatOk) {
           isWsConnectedRef.current = true;
+          // Fetch badge image URLs now that we have auth
+          fetchBadges(client_id, access_token, id).then(setBadgeMap);
         } else {
           if (onError) {
             onError();
@@ -155,6 +171,7 @@ function useTwitchOauth(maxMessage: number = 15) {
     startOauthConnect,
     startWebsocket,
     messages: receivedMsg,
+    badgeMap,
   };
 }
 

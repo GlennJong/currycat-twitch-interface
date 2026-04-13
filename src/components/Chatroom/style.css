@@ -4,19 +4,59 @@
   flex-direction: column;
   margin-bottom: 8px;
 }
+.chat-line .chat-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.chat-line .chat-badge {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.chat-line .chat-reward {
+  font-size: 14px;
+  line-height: 1;
+}
 .chat-line .chat-username {
-  font-size: 20px;
+  font-size: 18px;
 }
 .chat-line .chat-message {
   display: flex;
   flex-wrap: wrap;
+  padding-top: 4px;
+  padding-bottom: 4px;
   padding-left: 6px;
   white-space: break-spaces;
   color: var(--color-blackdark);
-  font-size: 20px;
+  font-size: 16px;
 }
+/* .chat-line .chat-message {
+
+} */
 .chat-line .chat-emote {
+  object-fit: contain;
   display: block;
-  width: 56px;
-  height: 56px;
+  width: 30px;
+  height: 30px;
+}
+.chat-line .chat-mention {
+  color: #b9a3e3;
+}
+.chat-line--redemption {
+  border-left: 2px solid rgba(255, 170, 0, 0.5);
+  padding-left: 6px;
+  border-radius: 2px;
+}
+.chat-line--redemption .chat-username--redemption {
+  font-size: 16px;
+  color: var(--color-blackdark);
+}
+.chat-reward-label {
+  font-size: 16px;
+  color: var(--color-blackdark);
+  margin-left: 4px;
 }

@@ -1,26 +1,26 @@
 import './style.css'
 import Chatroom from "@/components/Chatroom";
-import TodoList from "@/components/TodoList";
+// import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
-import Portrait, { PortraitRef } from '@/components/Portrait';
+// import Portrait, { PortraitRef } from '@/components/Portrait';
 import { FreePixelWindow } from '@glennjong/pixel-window';
 import Checkbox from '@/components/Checkbox/index';
 import { Color } from '@/constants';
-import Dialogue from '@/components/Dialogue';
+// import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
-  const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
-  const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
-  const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
+  // const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
+  // const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
+  // const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
   const [ isCatOpen, setIsCatOpen ] = useState(true);
-  const [ isDialogueOpen, setIsDialogueOpen ] = useState(false);
-  const [ isDialogueForceHide, setIsDialogueForceHide ] = useState(true);
-  const [ isDialogueShow, setIsDialogueShow ] = useState(false);
-  const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
+  // const [ isVoiceDialogueOpen, setIsVoiceDialogueOpen ] = useState(false);
+  // const [ isVoiceDialogueForceHide, setIsVoiceDialogueForceHide ] = useState(true);
+  // const [ isVoiceDialogueShow, setIsVoiceDialogueShow ] = useState(false);
+  // const [ dialogueLanguage, setDialogueLanguage ] = useState('zh-TW');
   
-  const portraitRef = useRef<PortraitRef>(null);
+  // const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
 
   useEffect(() => {
@@ -60,44 +60,48 @@ function MainScreen() {
     }
   }, [isCatOpen])
 
-  useEffect(() => {
-    if (!portraitRef.current || !isPortraitOpen) return;
-    if (isPortraitVoiceDetectOpen) {
-      portraitRef.current?.enableVoice?.();
-    }
-    else {
-      portraitRef.current?.disableVoice?.();
-    }
-  }, [isPortraitVoiceDetectOpen, isPortraitOpen])
+  // useEffect(() => {
+  //   if (!portraitRef.current || !isPortraitOpen) return;
+  //   if (isPortraitVoiceDetectOpen) {
+  //     portraitRef.current?.enableVoice?.();
+  //   }
+  //   else {
+  //     portraitRef.current?.disableVoice?.();
+  //   }
+  // }, [isPortraitVoiceDetectOpen, isPortraitOpen])
   
   return (
     <>
       <div className="main-screen">
-        <div className="top">
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+        }}>
+
           <Timer />
         </div>
+        {/* <div className="top">
+        </div> */}
         <div className="center">
           <div className="main">
           </div>
           <div className="side">
-            <FreePixelWindow
-              name="chatroom"
-              position={{ x: 400, y: 400 }}
-              pixel={32}
-              stroke={Color.BlackDark}
-              frame={Color.WhiteLight}
-              background={Color.WhiteLight}
-              style={{
-                position: 'relative',
-                height: '320px'
-              }}
-            >
-              <Chatroom onInput={handleMoveCat} />
-            </FreePixelWindow>
+            <Chatroom onInput={handleMoveCat} />
           </div>
 
         </div>
-        <div className="bottom">
+
+            <div>
+              <Checkbox
+                theme="light"
+                checked={isCatOpen}
+                label="CURRY CAT"
+                onChange={(checked) => setIsCatOpen(checked)}
+              />
+            </div>
+
+        {/* <div className="bottom">
           <div style={{ display: 'flex', gap: '12px', padding: '12px 24px', color: Color.WhiteLight }}>
             <div>
               <Checkbox
@@ -143,20 +147,19 @@ function MainScreen() {
             <div>
               <Checkbox
                 theme="light"
-                // disabled={true}
-                checked={isDialogueOpen}
+                checked={isVoiceDialogueOpen}
                 label="DIALOGUE"
-                onChange={(checked) => setIsDialogueOpen(checked)}
+                onChange={(checked) => setIsVoiceDialogueOpen(checked)}
               />
-              { isDialogueOpen &&
+              { isVoiceDialogueOpen &&
                 <Checkbox
                   theme="light"
-                  checked={isDialogueForceHide}
+                  checked={isVoiceDialogueForceHide}
                   label="HIDE"
-                  onChange={(checked) => setIsDialogueForceHide(checked)}
+                  onChange={(checked) => setIsVoiceDialogueForceHide(checked)}
                 />
               }
-              { isDialogueOpen &&
+              { isVoiceDialogueOpen &&
                 <Checkbox
                   theme="light"
                   checked={dialogueLanguage === 'zh-TW'}
@@ -166,8 +169,8 @@ function MainScreen() {
               }
             </div>
           </div>
-        </div>
-        { isTodoListOpen &&
+        </div> */}
+        {/* { isTodoListOpen &&
           <FreePixelWindow
             name="todolist"
             position={{ x: 400, y: 400 }}
@@ -178,8 +181,8 @@ function MainScreen() {
           >
             <TodoList />
           </FreePixelWindow>
-        }
-        { isPortraitOpen &&
+        } */}
+        {/* { isPortraitOpen &&
           <FreePixelWindow
             name="portrait"
             position={{ x: 400, y: 400 }}
@@ -193,12 +196,12 @@ function MainScreen() {
           >
             <Portrait ref={portraitRef} />
           </FreePixelWindow>
-        }
+        } */}
 
-        { isDialogueOpen &&
+        {/* { isVoiceDialogueOpen &&
           <FreePixelWindow
             name="dialogue"
-            style={{ display: (isDialogueForceHide || !isDialogueShow) ? 'none' : 'block' }}
+            style={{ display: (isVoiceDialogueForceHide || !isVoiceDialogueShow) ? 'none' : 'block' }}
             position={{ x: 400, y: 400 }}
             pixel={32}
             stroke={Color.BlackDark}
@@ -208,7 +211,7 @@ function MainScreen() {
             <Dialogue
               style={{ padding: '12px', fontSize: '30px' }}
               onInput={(content) => {
-                if (!isDialogueShow) setIsDialogueShow(true);
+                if (!isVoiceDialogueShow) setIsVoiceDialogueShow(true);
                 const list = ['崩潰', '煩', '好累'];
                 if (list.some((word) => content.includes(word))) {
                   portraitRef.current?.switch('b');
@@ -219,11 +222,11 @@ function MainScreen() {
               }}
               onSilence={() => {
                 portraitRef.current?.reset();
-                setIsDialogueShow(false);
+                setIsVoiceDialogueShow(false);
               }}
             />
           </FreePixelWindow>
-        }
+        } */}
       </div>
     </>
   );

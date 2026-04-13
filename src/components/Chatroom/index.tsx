@@ -1,8 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import useTwitchOauth from "./hooks/useTwitchOauth";
 import { twitchMessageConverter } from "./utils/twitchMessageConverter";
+import { PixelWindow } from '@glennjong/pixel-window';
 import { SCROLL_BOTTOM_DELAY_MS } from "./constants";
 import './style.css';
+import { Color } from "@/constants";
+
+// const MessageItem = ({message}: {message: string}) => {
+//   return (
+//       <PixelWindow
+//         pixel={32}
+//         stroke={Color.BlackDark}
+//         frame={Color.WhiteLight}
+//         background={Color.WhiteLight}
+//         style={{
+//           position: 'relative',
+//           height: '320px'
+//         }}
+//       >
+//         { message }
+//       </PixelWindow>
+//   )
+// }
 
 function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
   const [ isSyncisSyncing, setIsSyncing ] = useState<boolean>(false);
@@ -11,7 +30,7 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
   const [ manualUserId, setManualUserId ] = useState<string>('');
   const [ manualUserName, setManualUserName ] = useState<string>('');
   
-  const { messages, twitchState, startOauthConnect, startWebsocket, setManualTwitchState, clearManualTwitchState } = useTwitchOauth();
+  const { messages, badgeMap, twitchState, startOauthConnect, startWebsocket, setManualTwitchState, clearManualTwitchState } = useTwitchOauth();
   const scrollRef = useRef<HTMLDivElement>(null); // 新增滾動容器的 ref
   const scrollTimerRef = useRef<number | null>(null); // 延遲滾動的計時器
 
@@ -23,7 +42,11 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
     }
 
     // 先將文字輸入回傳（不需延遲）
-    onInput(messages?.[messages.length - 1]?.event?.message.text || '');
+    const last = messages?.[messages.length - 1];
+    const lastText = last?.type === 'chat'
+      ? last.event?.message?.text || ''
+      : last?.event?.user_input || '';
+    onInput(lastText);
 
     // 延遲滾動至底部，給圖像（表情符號）緩衝載入時間
     scrollTimerRef.current = window.setTimeout(() => {
@@ -101,10 +124,23 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
                 // overflowY: 'hidden', // prevent visible scroll bar
               }}
             >
-              { messages?.map(_message => 
-                <div style={{ textAlign: 'left', color: '#fff' }} key={_message.event.message_id}>
-                  <div dangerouslySetInnerHTML={{ __html: twitchMessageConverter(_message.event) }} />
-                </div>
+              { messages?.map(_message =>
+                <div style={{ margin: '4px 0' }} key={_message.id}>
+                  <PixelWindow
+                    pixel={32}
+                    stroke={Color.BlackDark}
+                    frame={Color.WhiteLight}
+                    background={Color.WhiteLight}
+                    style={{
+                      position: 'relative',
+                      textAlign: 'left',
+                      color: '#fff'
+                    }}
+                  >
+                    {/* { message } */}
+                      <div dangerouslySetInnerHTML={{ __html: twitchMessageConverter(_message, badgeMap) }} />
+                  </PixelWindow>
+                  </div>
                 )
               ||
                 <div style={{ textAlign: 'left', color: '#fff', opacity: '.3' }}>
