@@ -99,6 +99,7 @@ function MainScreen() {
           position: 'absolute',
           left: 0,
           top: 0,
+          zIndex: 2,
         }}>
 
           <Timer />
