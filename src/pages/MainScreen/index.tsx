@@ -16,6 +16,9 @@ function MainScreen() {
   // const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
   // const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
   const [ isCatOpen, setIsCatOpen ] = useState(true);
+  const [ isBackgroundControlDIsplay, setIsBackgroundControlDIsplay ] = useState(false);
+  const [ backgroundImageUrl, setBackgroundImageUrl ] = useState('');
+  const [ backgroundImageInput, setBackgroundImageInput ] = useState('');
   // const [ isVoiceDialogueOpen, setIsVoiceDialogueOpen ] = useState(false);
   // const [ isVoiceDialogueForceHide, setIsVoiceDialogueForceHide ] = useState(true);
   // const [ isVoiceDialogueShow, setIsVoiceDialogueShow ] = useState(false);
@@ -73,22 +76,25 @@ function MainScreen() {
   
   return (
     <>
-
-      <FlexibleBackground
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 0,
-        }}
-        background="linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)"
-        defaultMaskWidth={560}
-        defaultMaskHeight={540}
-        defaultMaskPosition={{ top: 120, left: 80 }}
-      />
       <div className="main-screen">
+        <FlexibleBackground
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 0,
+          }}
+          background={
+            backgroundImageUrl
+              ? `url("${backgroundImageUrl}") center repeat`
+              : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+          }
+          defaultMaskWidth={560}
+          defaultMaskHeight={540}
+          defaultMaskPosition={{ top: 120, left: 80 }}
+        />
         <div style={{
           position: 'absolute',
           left: 0,
@@ -108,13 +114,46 @@ function MainScreen() {
 
         </div>
 
-            <div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 24px', height: '24px' }}>
               <Checkbox
                 theme="light"
                 checked={isCatOpen}
                 label="CURRY CAT"
                 onChange={(checked) => setIsCatOpen(checked)}
               />
+              <Checkbox
+                theme="light"
+                checked={isBackgroundControlDIsplay}
+                label="BACKGROUND"
+                onChange={(checked) => setIsBackgroundControlDIsplay(checked)}
+              />
+              { isBackgroundControlDIsplay &&
+                <div style={{ position: 'relative', display: 'flex', gap: 12 }}>
+                  <input
+                    className="dark"
+                    type="text"
+                    placeholder="Background image URL"
+                    value={backgroundImageInput}
+                    onChange={(e) => setBackgroundImageInput(e.target.value)}
+                    style={{ width: 320 }}
+                  />
+                  <button
+                    className="dark"
+                    onClick={() => setBackgroundImageUrl(backgroundImageInput.trim())}
+                  >
+                    套用
+                  </button>
+                  <button
+                    className="dark"
+                    onClick={() => {
+                      setBackgroundImageInput('');
+                      setBackgroundImageUrl('');
+                    }}
+                  >
+                    清除
+                  </button>
+                </div>
+              }
             </div>
 
         {/* <div className="bottom">
