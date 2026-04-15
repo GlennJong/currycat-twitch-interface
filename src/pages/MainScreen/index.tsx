@@ -7,6 +7,7 @@ import { Cat } from "./Cat";
 // import Portrait, { PortraitRef } from '@/components/Portrait';
 // import { FreePixelWindow } from '@glennjong/pixel-window';
 import Checkbox from '@/components/Checkbox/index';
+import FlexibleBackground from '@/components/FlexibleBackground';
 // import { Color } from '@/constants';
 // import Dialogue from '@/components/Dialogue';
 
@@ -72,6 +73,21 @@ function MainScreen() {
   
   return (
     <>
+
+      <FlexibleBackground
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+        }}
+        background="linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)"
+        defaultMaskWidth={560}
+        defaultMaskHeight={540}
+        defaultMaskPosition={{ top: 120, left: 80 }}
+      />
       <div className="main-screen">
         <div style={{
           position: 'absolute',

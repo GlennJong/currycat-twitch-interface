@@ -19,13 +19,17 @@
 }
 
 .center .side {
+  position: relative;
   width: 300px;
   height: 100%;
+  z-index: 1;
 }
 
 .center .main {
+  position: relative;
   flex: 1;
   height: 100%;
+  z-index: 1;
 }
 
 .bottom {
