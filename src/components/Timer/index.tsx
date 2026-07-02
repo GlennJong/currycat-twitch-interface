@@ -77,6 +77,41 @@ const Timer: React.FC = () => {
     }
   }, [remaining]);
 
+  // Listen for external timer updates (from Dock via localStorage or BroadcastChannel)
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('currycat-dock');
+      bc.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'timer-state' && ev.data.payload) {
+          const s = ev.data.payload;
+          try {
+            setInputTime(s.inputTime || getDefaultInputTime());
+            setDuration(s.duration || 60);
+            setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
+          } catch {}
+        }
+      };
+    }
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'timer-state' && e.newValue) {
+        try {
+          const s = JSON.parse(e.newValue);
+          setInputTime(s.inputTime || getDefaultInputTime());
+          setDuration(s.duration || 60);
+          setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
+        } catch {}
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, []);
+
   // 開始倒數，計算距離指定時間的秒數，考慮時區偏移 (+8)
   const startTimer = () => {
     const now = new Date();
@@ -150,43 +185,30 @@ const Timer: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ maxWidth: 400, padding: '12px 24px', height: '48px', display: 'flex', flexDirection: 'column' }}>
+    <div className="timer">
+      <div className="timer-left">
         {remaining === null ? (
-          <div style={{ display: 'flex', gap: 8, }}>
+          <div className="timer-row">
             <input
-              className="dark"
+              className="input dark"
               type="time"
               value={inputTime}
               onChange={e => setInputTime(e.target.value)}
             />
-            <button className="dark" onClick={startTimer}>確定</button>
+            <button className="button dark" onClick={startTimer}>確定</button>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="timer-row">
             <Clock style={{ width: '42px', color: Color.WhiteLight }} onClick={cancelTimer} />
-            <div className="counter" style={{ height: '48px' }}>
+            <div className="counter">
               <CounterBack style={{ color: Color.WhiteDark }} />
               <div className="bar">
                 <div
                   onMouseDown={onBarMouseDown}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    position: 'relative',
-                    cursor: dragging ? 'grabbing' : 'pointer',
-                    userSelect: 'none',
-                  }}
+                  className={`bar-interactive${dragging ? ' dragging' : ''}`}
                 >
                   <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
-                      width: '100%',
-                      height: '100%',
-                      zIndex: 1,
-                    }}
+                    className="bar-overlay"
                     onMouseDown={onBarContainerMouseDown}
                   />
                 </div>
@@ -197,7 +219,7 @@ const Timer: React.FC = () => {
           </div>
         )}
       </div>
-      <div style={{ padding: '8px 24px', color: Color.WhiteLight, fontSize: 32 }}>
+      <div className="timer-right">
         {remaining !== null ? formatRemainingTime(Math.max(remaining, 0)) : ''}
       </div>
     </div>

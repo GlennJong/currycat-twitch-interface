@@ -1,0 +1,92 @@
+/* Twitch-like Dock theme for DockApp */
+.dock-app {
+  padding: 12px;
+  background: linear-gradient(180deg, #0e0b16 0%, #211233 100%);
+  color: #e6e6e6;
+  height: 100vh;
+  box-sizing: border-box;
+  /* font-family: 'BoutiqueBitmap', sans-serif; */
+}
+
+.dock-title {
+  margin-top: 0;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.dock-desc {
+  margin: 8px 0;
+  color: #cfcfe0;
+  font-size: 14px;
+}
+
+.dock-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dock-banner-preview {
+  font-size: 16px;
+  color: #cfcfe0;
+}
+
+.dock-section {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.dock-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dock-label {
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.dock-number {
+  width: 80px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: inherit;
+}
+
+.dock-input {
+  flex: 1;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: inherit;
+}
+
+.dock-note {
+  color: #ccc;
+  font-size: 13px;
+}
+
+.dock-todos {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.dock-todo-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.dock-todo-item .todo-text {
+  flex: 1;
+}
+
+.dock-todo-item.completed .todo-text {
+  text-decoration: line-through;
+  opacity: 0.7;
+}

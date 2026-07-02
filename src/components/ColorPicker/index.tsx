@@ -1,5 +1,6 @@
 import 'react';
 import { useState, useEffect } from 'react';
+import './style.css';
 
 const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChange?: (color: string) => void}) => {
   const [color, setColor] = useState(defaultColor || "#ffffff");
@@ -37,15 +38,14 @@ const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChan
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', }}>
-      <label style={{ position: 'relative', cursor: 'pointer'}} onClick={handleLabelClick}>
+    <div className="colorpicker">
+      <label onClick={handleLabelClick}>
         <input
-          style={{ opacity: 0, visibility: 'hidden', position: 'absolute' }}
           type="color"
           value={color}
           onChange={e => setColor(e.target.value)}
         />
-        <div style={{ mixBlendMode: 'difference', fontSize: '12px' }}>
+        <div className="value">
           {color}
         </div>
         {isInputVisible && (
@@ -54,7 +54,6 @@ const ColorPicker = ({ defaultColor, onChange }: { defaultColor?: string, onChan
             defaultValue={color}
             onBlur={handleInputBlur}
             onKeyDown={handleInputKeyDown}
-            style={{ position: 'absolute', top: '20px', left: 0, zIndex: 0, width: '100px', fontSize: '12px' }}
           />
         )}
       </label>

@@ -1,0 +1,7 @@
+/* Styles for Dialogue component */
+.dialogue-wrapper {
+  display: block;
+}
+.dialogue-content {
+  /* content container receives `style` prop in the component */
+}

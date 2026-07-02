@@ -1,0 +1,19 @@
+/* Styles for Switch component */
+.switch {
+  display: inline-flex;
+  align-items: center;
+}
+.switch img {
+  display: block;
+}
+.switch span {
+  margin-left: 6px;
+}
+.switch-icon {
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+.switch input {
+  display: none;
+}

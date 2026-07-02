@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import { VoiceInputUtility } from './voice-inputer';
+import './style.css';
 
 const Dialogue = forwardRef(function Dialogue({ style, onInput, onSilence }: { style?: React.CSSProperties, onInput: (content: string) => void, onSilence: () => void }, ref) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -59,9 +60,9 @@ const Dialogue = forwardRef(function Dialogue({ style, onInput, onSilence }: { s
   }));
 
   return (
-    <div>
+    <div className="dialogue-wrapper">
       <div ref={wrapperRef}>
-        <div style={style} ref={dialogElemRef}></div>
+        <div className="dialogue-content" style={style} ref={dialogElemRef}></div>
       </div>
     </div>
   );

@@ -1,0 +1,19 @@
+/* Styles for Checkbox component */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+}
+.checkbox img {
+  display: block;
+}
+.checkbox span {
+  margin-left: 6px;
+}
+.checkbox-icon {
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+.checkbox input {
+  display: none;
+}

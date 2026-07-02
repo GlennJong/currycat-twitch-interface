@@ -1,6 +1,6 @@
 import './style.css'
 import Chatroom from "@/components/Chatroom";
-// import TodoList from "@/components/TodoList";
+import TodoList from "@/components/TodoList";
 import Timer from "@/components/Timer";
 import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
@@ -8,17 +8,34 @@ import { Cat } from "./Cat";
 // import { FreePixelWindow } from '@glennjong/pixel-window';
 import Checkbox from '@/components/Checkbox/index';
 import FlexibleBackground from '@/components/FlexibleBackground';
+import { FreePixelWindow } from '@glennjong/pixel-window';
+import { Color } from '@/constants';
 // import { Color } from '@/constants';
 // import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
-  // const [ isTodoListOpen, setIsTodoListOpen ] = useState(true);
   // const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
   // const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
-  const [ isCatOpen, setIsCatOpen ] = useState(true);
+  const [ isCatOpen, setIsCatOpen ] = useState<boolean>(() => {
+    try { const v = localStorage.getItem('cat-open'); return v === null ? true : v === '1'; } catch { return true; }
+  });
   const [ isBackgroundControlDIsplay, setIsBackgroundControlDIsplay ] = useState(false);
   const [ backgroundImageUrl, setBackgroundImageUrl ] = useState('');
   const [ backgroundImageInput, setBackgroundImageInput ] = useState('');
+  const STORAGE_MASK_KEY = 'currycat.background.mask';
+  const [mask, setMask] = useState(() => {
+    try {
+      const v = localStorage.getItem(STORAGE_MASK_KEY);
+      if (!v) return null;
+      return JSON.parse(v);
+    } catch { return null }
+  });
+  const [ isTodoListOpen, setIsTodoListOpen ] = useState<boolean>(() => {
+    try { return localStorage.getItem('todo-open') === '1'; } catch { return false; }
+  });
+  const [ _storedTodoOpen, setStoredTodoOpen ] = useState<string | null>(() => {
+    try { return localStorage.getItem('todo-open'); } catch { return null; }
+  });
   // const [ isVoiceDialogueOpen, setIsVoiceDialogueOpen ] = useState(false);
   // const [ isVoiceDialogueForceHide, setIsVoiceDialogueForceHide ] = useState(true);
   // const [ isVoiceDialogueShow, setIsVoiceDialogueShow ] = useState(false);
@@ -64,6 +81,65 @@ function MainScreen() {
     }
   }, [isCatOpen])
 
+  // Listen for dock messages to update mask
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('currycat-dock');
+      bc.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'set-mask') {
+          const m = ev.data.payload;
+          try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch {}
+          setMask(m);
+        }
+      };
+    }
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_MASK_KEY) {
+        try { setMask(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, []);
+
+
+  // Listen for dock open/close commands for TodoList
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'todo-open') {
+        setIsTodoListOpen(e.newValue === '1');
+        setStoredTodoOpen(e.newValue);
+      }
+      if (e.key === 'cat-open') {
+        setIsCatOpen(e.newValue === '1');
+      }
+    };
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('currycat-dock');
+      bc.onmessage = (ev) => {
+          if (ev.data && ev.data.type === 'todo-open') {
+            setIsTodoListOpen(!!ev.data.payload);
+            setStoredTodoOpen(ev.data.payload ? '1' : '0');
+          }
+          if (ev.data && ev.data.type === 'cat-open') {
+            setIsCatOpen(!!ev.data.payload);
+          }
+      };
+    }
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, []);
+
   // useEffect(() => {
   //   if (!portraitRef.current || !isPortraitOpen) return;
   //   if (isPortraitVoiceDetectOpen) {
@@ -94,6 +170,16 @@ function MainScreen() {
           defaultMaskWidth={560}
           defaultMaskHeight={540}
           defaultMaskPosition={{ top: 120, left: 80 }}
+          mask={mask || undefined}
+          onMaskChange={(m) => {
+            try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch {}
+            setMask(m);
+            if (typeof (window as any).BroadcastChannel !== 'undefined') {
+              const bc = new BroadcastChannel('currycat-dock');
+              bc.postMessage({ type: 'mask-changed', payload: m });
+              bc.close();
+            }
+          }}
         />
         <div style={{
           position: 'absolute',
@@ -104,58 +190,62 @@ function MainScreen() {
 
           <Timer />
         </div>
-        {/* <div className="top">
-        </div> */}
+        {/* Floating TodoList (overlay) */}
+        {isTodoListOpen && (
+          <FreePixelWindow
+            position={{ x: 10, y: 80 }}
+            name="todolist"
+            pixel={32}
+            stroke={Color.BlackDark}
+            frame={Color.WhiteLight}
+            background={Color.WhiteLight}
+            zIndex={999}
+          >
+            <TodoList showInput={false} />
+          </FreePixelWindow>
+        )}
         <div className="center">
           <div className="main">
           </div>
           <div className="side">
             <Chatroom onInput={handleMoveCat} />
           </div>
-
         </div>
-
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 24px', height: '24px' }}>
-              <Checkbox
-                theme="light"
-                checked={isCatOpen}
-                label="CURRY CAT"
-                onChange={(checked) => setIsCatOpen(checked)}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 24px', height: '24px' }}>
+          <Checkbox
+            theme="light"
+            checked={isBackgroundControlDIsplay}
+            label="BACKGROUND"
+            onChange={(checked) => setIsBackgroundControlDIsplay(checked)}
+          />
+          { isBackgroundControlDIsplay &&
+            <div style={{ position: 'relative', display: 'flex', gap: 12 }}>
+              <input
+                className="dark"
+                type="text"
+                placeholder="Background image URL"
+                value={backgroundImageInput}
+                onChange={(e) => setBackgroundImageInput(e.target.value)}
+                style={{ width: 320 }}
               />
-              <Checkbox
-                theme="light"
-                checked={isBackgroundControlDIsplay}
-                label="BACKGROUND"
-                onChange={(checked) => setIsBackgroundControlDIsplay(checked)}
-              />
-              { isBackgroundControlDIsplay &&
-                <div style={{ position: 'relative', display: 'flex', gap: 12 }}>
-                  <input
-                    className="dark"
-                    type="text"
-                    placeholder="Background image URL"
-                    value={backgroundImageInput}
-                    onChange={(e) => setBackgroundImageInput(e.target.value)}
-                    style={{ width: 320 }}
-                  />
-                  <button
-                    className="dark"
-                    onClick={() => setBackgroundImageUrl(backgroundImageInput.trim())}
-                  >
-                    套用
-                  </button>
-                  <button
-                    className="dark"
-                    onClick={() => {
-                      setBackgroundImageInput('');
-                      setBackgroundImageUrl('');
-                    }}
-                  >
-                    清除
-                  </button>
-                </div>
-              }
+              <button
+                className="dark"
+                onClick={() => setBackgroundImageUrl(backgroundImageInput.trim())}
+              >
+                套用
+              </button>
+              <button
+                className="dark"
+                onClick={() => {
+                  setBackgroundImageInput('');
+                  setBackgroundImageUrl('');
+                }}
+              >
+                清除
+              </button>
             </div>
+          }
+        </div>
 
         {/* <div className="bottom">
           <div style={{ display: 'flex', gap: '12px', padding: '12px 24px', color: Color.WhiteLight }}>

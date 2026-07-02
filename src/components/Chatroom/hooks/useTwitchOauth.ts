@@ -35,11 +35,32 @@ function useTwitchOauth(maxMessage: number = 15) {
   const receivedMsgRef = useRef<TwitchChatEntry[]>([]);
   const websocketRef = useRef<WebSocket>(null);
   const isWsConnectedRef = useRef<boolean>(false);
+  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const desiredSyncRef = useRef<boolean>(false);
 
   // Save manual twitch state to localStorage
   const saveManualTwitchState = useCallback((state: TwitchOauthLoginState & TwitchUserState) => {
-    localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(state));
+    } catch {}
+
+    // Broadcast the manual state so other windows (dock/overlay) can sync.
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('currycat-dock');
+        bc.postMessage({ type: 'manual-twitch-state', payload: state, source: instanceIdRef.current });
+        bc.close();
+      } catch {}
+    }
   }, []);
+
+  // If a remote request to start syncing exists, start when twitchState becomes available
+  useEffect(() => {
+    if (desiredSyncRef.current && twitchState) {
+      startWebsocket();
+    }
+  }, [twitchState]);
 
   // Load manual twitch state from localStorage
   const loadManualTwitchState = useCallback((): (TwitchOauthLoginState & TwitchUserState) | null => {
@@ -90,6 +111,60 @@ function useTwitchOauth(maxMessage: number = 15) {
   useEffect(() => {
     handleGetTwitchState();
   }, [handleGetTwitchState]);
+
+  // Listen for manual twitch state updates from other windows (dock/overlay)
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('currycat-dock');
+      bc.onmessage = (ev) => {
+        if (!ev.data) return;
+        if (ev.data.source && ev.data.source === instanceIdRef.current) return;
+        if (ev.data.type === 'manual-twitch-state' && ev.data.payload) {
+          try {
+            const p = ev.data.payload as TwitchOauthLoginState & TwitchUserState;
+            setTwitchState(p);
+            try { localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(p)); } catch {}
+          } catch {}
+        }
+        if (ev.data.type === 'sync-chat') {
+          try {
+            const v = !!ev.data.payload;
+            desiredSyncRef.current = v;
+            try { localStorage.setItem('currycat.syncChat', v ? '1' : '0'); } catch {}
+            if (v) {
+              if (twitchState) startWebsocket();
+            } else {
+              stopWebsocket();
+            }
+          } catch {}
+        }
+      };
+    }
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === MANUAL_TWITCH_STATE_KEY && e.newValue) {
+        try { const p = JSON.parse(e.newValue); setTwitchState(p); } catch {}
+      }
+      if (e.key === 'currycat.syncChat') {
+        try {
+          const v = e.newValue === '1';
+          desiredSyncRef.current = v;
+          if (v) {
+            if (twitchState) startWebsocket();
+          } else {
+            stopWebsocket();
+          }
+        } catch {}
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, []);
 
   function startOauthConnect() {
     openTwitchOauthLogin(client_id, redirect_uri);
@@ -161,6 +236,27 @@ function useTwitchOauth(maxMessage: number = 15) {
     });
 
     websocketRef.current = ws;
+    // mark syncing requested
+    desiredSyncRef.current = true;
+    setIsSyncing(true);
+    try { localStorage.setItem('currycat.syncChat', '1'); } catch {}
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: true, source: instanceIdRef.current }); bc.close(); } catch {}
+    }
+  }
+
+  function stopWebsocket() {
+    try {
+      if (websocketRef.current) websocketRef.current.close();
+    } catch {}
+    websocketRef.current = null;
+    isWsConnectedRef.current = false;
+    desiredSyncRef.current = false;
+    setIsSyncing(false);
+    try { localStorage.setItem('currycat.syncChat', '0'); } catch {}
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: false, source: instanceIdRef.current }); bc.close(); } catch {}
+    }
   }
 
   return {
@@ -170,6 +266,8 @@ function useTwitchOauth(maxMessage: number = 15) {
     clearManualTwitchState,
     startOauthConnect,
     startWebsocket,
+    stopWebsocket,
+    isSyncing,
     messages: receivedMsg,
     badgeMap,
   };

@@ -1,10 +1,10 @@
 import { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { VoiceDetectUtility } from "./voice";
+import './style.css';
 // import VoiceInputer from "./ws-voice-inputer";
 
 // 尺寸配置常數
 const PORTRAIT_SIZE = 120; // 單個角色顯示尺寸
-const SPRITE_SHEET_SIZE = PORTRAIT_SIZE * 2; // sprite sheet 總尺寸 (2x2 grid)
 
 export type PortraitRef = {
   switch: (type?: string) => void;
@@ -70,15 +70,8 @@ const Portrait = forwardRef(function Portrait(
   return (
     <div
       ref={containerRef}
-      style={{
-        display: "block",
-        width: `${PORTRAIT_SIZE}px`,
-        height: `${PORTRAIT_SIZE}px`,
-        backgroundImage: "url('./assets/portrait.svg')",
-        backgroundPosition: "0px 0px",
-        backgroundSize: `${SPRITE_SHEET_SIZE}px ${SPRITE_SHEET_SIZE}px`,
-        ...style,
-      }}
+      className="portrait"
+      style={{ ...style }}
     />
   );
 });

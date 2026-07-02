@@ -1,12 +1,21 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './style.css';
+import { PixelWindow } from '@glennjong/pixel-window';
+import { Color } from '@/constants';
 
 export type MaskPosition = {
   top?: number;
   left?: number;
   bottom?: number;
   right?: number;
+};
+
+export type Mask = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 type FlexibleBackgroundProps = {
@@ -34,6 +43,13 @@ type FlexibleBackgroundProps = {
   style?: React.CSSProperties;
   className?: string;
   children?: React.ReactNode;
+  /**
+   * Optional externally-controlled mask. When provided the component will
+   * initialize to and keep in sync with this mask, and will call
+   * `onMaskChange` when the user drags/resizes the mask.
+   */
+  mask?: Mask;
+  onMaskChange?: (mask: Mask) => void;
 };
 
 const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
@@ -49,6 +65,8 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
   style,
   className,
   children,
+  mask,
+  onMaskChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   // Viewport-relative rect of the background container, used to align the
@@ -68,17 +86,27 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const maskRef = useRef<HTMLDivElement>(null);
 
+  // If parent drives the mask, keep internal state in sync when it changes.
+  useEffect(() => {
+    if (!mask) return;
+    setMaskSize({ width: mask.width, height: mask.height });
+    setMaskPos({ x: mask.x, y: mask.y });
+    // Mark initialized so the portal layer can render immediately.
+    setInitialized(true);
+  }, [mask?.width, mask?.height, mask?.x, mask?.y]);
+
   // Exit edit mode when clicking outside the mask (blur-like behavior).
   useEffect(() => {
     if (!isEditing) return;
     const onDocMouseDown = (e: MouseEvent) => {
       if (maskRef.current && !maskRef.current.contains(e.target as Node)) {
+        if (onMaskChange) onMaskChange({ x: maskPos.x, y: maskPos.y, width: maskSize.width, height: maskSize.height });
         setIsEditing(false);
       }
     };
     document.addEventListener('mousedown', onDocMouseDown);
     return () => document.removeEventListener('mousedown', onDocMouseDown);
-  }, [isEditing]);
+  }, [isEditing, maskPos.x, maskPos.y, maskSize.width, maskSize.height, onMaskChange]);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -110,6 +138,13 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
           } else if (pos.bottom !== undefined) {
             y = rect.height - defaultMaskHeight - pos.bottom;
           }
+        }
+
+        // If an external mask is provided, initialize from that instead.
+        if (mask) {
+          x = mask.x;
+          y = mask.y;
+          setMaskSize({ width: mask.width, height: mask.height });
         }
 
         setMaskPos({ x, y });
@@ -165,6 +200,7 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
     const origX = maskPos.x;
     const origY = maskPos.y;
 
+    let last = { x: origX, y: origY };
     const onMove = (ev: MouseEvent) => {
       const next = clampPosition(
         origX + (ev.clientX - startX),
@@ -172,11 +208,13 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
         maskSize.width,
         maskSize.height
       );
+      last = next;
       setMaskPos(next);
     };
     const onUp = () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      if (onMaskChange) onMaskChange({ x: last.x, y: last.y, width: maskSize.width, height: maskSize.height });
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -190,6 +228,7 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
     const startW = maskSize.width;
     const startH = maskSize.height;
 
+    let lastWH = { width: startW, height: startH };
     const onMove = (ev: MouseEvent) => {
       const maxW = Math.max(minMaskWidth, containerRect.width - maskPos.x);
       const maxH = Math.max(minMaskHeight, containerRect.height - maskPos.y);
@@ -201,11 +240,13 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
         maxH,
         Math.max(minMaskHeight, startH + (ev.clientY - startY))
       );
+      lastWH = { width: nextW, height: nextH };
       setMaskSize({ width: nextW, height: nextH });
     };
     const onUp = () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      if (onMaskChange) onMaskChange({ x: maskPos.x, y: maskPos.y, width: lastWH.width, height: lastWH.height });
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -270,13 +311,11 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
           <div
             className="flexible-background__control-layer"
             style={{
-              position: 'fixed',
               left: containerRect.left,
               top: containerRect.top,
               width: containerRect.width,
               height: containerRect.height,
               zIndex: controlZIndex,
-              pointerEvents: 'none',
             }}
           >
             <div
@@ -291,6 +330,16 @@ const FlexibleBackground: React.FC<FlexibleBackgroundProps> = ({
               }}
               onMouseDown={handleMaskMouseDown}
             >
+              <div style={{ width: 'calc(100% + 24px)', height: 'calc(100% + 24px)', transform: 'translate(-12px, -12px)'}}>
+                <PixelWindow
+                  pixel={32}
+                  stroke={Color.BlackDark}
+                  frame={Color.WhiteLight}
+                  background="transparent"
+                >
+                  <div />
+                </PixelWindow>
+              </div>
               {maskImage && (
                 <img
                   className="flexible-background__mask-preview"

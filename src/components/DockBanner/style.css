@@ -1,0 +1,15 @@
+/* Styles for DockBanner */
+.dock-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 20px;
+  background-color: var(--color-yellowlight, #fff176);
+  color: var(--color-blackdark, #000);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.6);
+}

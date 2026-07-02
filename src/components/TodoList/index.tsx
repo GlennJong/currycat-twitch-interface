@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './style.css';
 import Checkbox from '../Checkbox';
 
@@ -8,8 +8,13 @@ interface Todo {
   completed: boolean;
 }
 
-const TodoList: React.FC = () => {
+type TodoListProps = {
+  showInput?: boolean;
+}
+
+const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
   const [todos, setTodos] = useState<Todo[] | null>(null);
+  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   // 初始化時載入 localStorage
   useEffect(() => {
     setTodos(loadTodosFromLocalStorage());
@@ -21,6 +26,49 @@ const TodoList: React.FC = () => {
       saveTodosToLocalStorage(todos);
     }
   }, [todos]);
+  // Broadcast local changes to other windows (dock/overlay)
+  useEffect(() => {
+    if (todos === null) return;
+    try {
+      if (typeof (window as any).BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('currycat-dock');
+        bc.postMessage({ type: 'todo-list', payload: todos, source: instanceIdRef.current });
+        bc.close();
+      }
+    } catch {}
+  }, [todos]);
+
+  // Listen for external updates (from Dock)
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    if (typeof (window as any).BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('currycat-dock');
+      bc.onmessage = (ev) => {
+        if (!ev.data) return;
+        if (ev.data.source === instanceIdRef.current) return;
+        if (ev.data.type === 'todo-list' && ev.data.payload) {
+          try {
+            setTodos(ev.data.payload);
+          } catch {}
+        }
+      };
+    }
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'todos') {
+        try {
+          const parsed = JSON.parse(e.newValue || '[]');
+          setTodos(parsed);
+        } catch {}
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, []);
   const [input, setInput] = useState('');
 
   const addTodo = () => {
@@ -48,51 +96,39 @@ const TodoList: React.FC = () => {
 
   if (todos === null) return null;
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: 20 }}>
-      {/* <h2>Todo List</h2> */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="text"
-          value={input}
-          autoFocus={true}
-          tabIndex={1}
-          spellCheck="true"
-          onChange={e => setInput(e.target.value)}
-          onCompositionEnd={() => {
-            // 當組字結束時，不做任何事
-          }}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            // 如果正在組字中，不處理任何按鍵
-            if ((e.nativeEvent as any).isComposing) return;
-            
-            // 只有在不是組字狀態，且按下 Enter 時才新增
-            if (e.key === 'Enter') {
-              addTodo();
-            }
-          }}
-          placeholder="..."
-          style={{ flex: 1 }}
-        />
-        <button onClick={addTodo} style={{ padding: '8px 16px' }}>新增</button>
-      </div>
-      <div style={{
-          listStyle: 'none',
-          margin: '0 -6px',
-          marginTop: '12px',
-        }}
-      >
-        <ul style={{
-          padding: 0,
-          margin: 0,
-          listStyle: 'none',
-        }}>
+    <div className="todolist">
+      {showInput && (
+        <div className="todolist-input">
+          <input
+            type="text"
+            value={input}
+            autoFocus={showInput}
+            tabIndex={1}
+            spellCheck="true"
+            onChange={e => setInput(e.target.value)}
+            onCompositionEnd={() => {
+              // 當組字結束時，不做任何事
+            }}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              // 如果正在組字中，不處理任何按鍵
+              if ((e.nativeEvent as any).isComposing) return;
+              
+              // 只有在不是組字狀態，且按下 Enter 時才新增
+              if (e.key === 'Enter') {
+                addTodo();
+              }
+            }}
+            placeholder="..."
+          />
+          <button onClick={addTodo}>新增</button>
+        </div>
+      )}
+      <div className="todolist-list">
+        <ul className="todolist-ul">
           {todos.map(todo => (
             <li
               key={todo.id}
-              style={{
-                display: 'flex',
-                opacity: todo.completed ? 0.6 : 1,
-              }}
+              className={`todolist-item${todo.completed ? ' completed' : ''}`}
             >
               <Checkbox
                 label=""
@@ -100,8 +136,8 @@ const TodoList: React.FC = () => {
                 style={{ marginTop: '2px' }}
                 onChange={() => toggleTodo(todo.id)}
               />
-              <span style={{ flex: 1, marginLeft: 4, lineBreak: 'anywhere', textDecoration: todo.completed ? 'line-through' : 'none' }}>{todo.text}</span>
-              <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => deleteTodo(todo.id)}>x</span>
+              <span className="text">{todo.text}</span>
+              <span className="delete" onClick={() => deleteTodo(todo.id)}>x</span>
             </li>
           ))}
         </ul>

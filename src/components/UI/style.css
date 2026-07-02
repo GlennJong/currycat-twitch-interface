@@ -1,0 +1,97 @@
+/* Shared UI styles moved from global.css */
+
+.button {
+  border: none;
+  background: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: 6px solid var(--color-blackdark);
+  font-family: 'BoutiqueBitmap', sans-serif;
+  background-color: var(--color-yellowlight);
+  border-bottom: 6px solid var(--color-yellowdark);
+  text-transform: uppercase;
+  font-weight: 900;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.button.small {
+  outline: 6px solid var(--color-blackdark);
+  padding: 4px 8px;
+  font-size: 16px;
+}
+
+.button.xs {
+  outline: 3px solid var(--color-blackdark);
+  padding: 0;
+  font-size: 12px;
+}
+
+.button.dark {
+  outline: 6px solid var(--color-whitelight);
+}
+
+input[type=text].input,
+input[type=time].input {
+  border: none;
+  min-width: 100px;
+  background: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: 6px solid var(--color-blackdark);
+  font-family: 'BoutiqueBitmap', sans-serif;
+  background-color: var(--color-whitelight);
+  border-top: 6px solid var(--color-whitedark);
+  color: var(--color-blackdark);
+  font-weight: 900;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+input[type=text].input.dark,
+input[type=time].input.dark {
+  outline: 6px solid var(--color-whitelight);
+  border-color: var(--color-blacklight);
+  background-color: var(--color-blackdark);
+  color: var(--color-whitelight);
+}
+
+.button:active {
+  margin-bottom: 6px;
+  transform: translate(0px, 6px);
+  border-bottom: 0px solid var(--color-yellowdark);
+}
+
+input + .button {
+  margin-left: -2px;
+}
+
+a {
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 32px;
+  margin: 0;
+  padding: 0;
+}
+
+p, span {
+  font-size: 20px;
+}
+
+/* Responsive rules for OBS Dock: hide the main overlay in narrow dock windows */
+@media (max-width: 480px) {
+  .main-screen {
+    display: none;
+  }
+  body {
+    overflow: auto;
+  }
+  .button {
+    font-size: 16px;
+  }
+  p, span {
+    font-size: 14px;
+  }
+}
