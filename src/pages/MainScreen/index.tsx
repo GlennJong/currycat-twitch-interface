@@ -199,9 +199,11 @@ function MainScreen() {
             stroke={Color.BlackDark}
             frame={Color.WhiteLight}
             background={Color.WhiteLight}
-            zIndex={999}
+            zIndex={9999}
           >
-            <TodoList showInput={false} />
+            <div style={{ width: '120px' }}>
+              <TodoList showInput={false} />
+            </div>
           </FreePixelWindow>
         )}
         <div className="center">
