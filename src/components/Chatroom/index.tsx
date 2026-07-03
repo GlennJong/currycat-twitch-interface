@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import useTwitchOauth from "./hooks/useTwitchOauth";
 import { twitchMessageConverter } from "./utils/twitchMessageConverter";
 import { PixelWindow } from '@glennjong/pixel-window';
@@ -24,13 +24,8 @@ import { Color } from "@/constants";
 // }
 
 function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
-  
-  const [ showManualInput, setShowManualInput ] = useState<boolean>(false);
-  const [ manualAccessToken, setManualAccessToken ] = useState<string>('');
-  const [ manualUserId, setManualUserId ] = useState<string>('');
-  const [ manualUserName, setManualUserName ] = useState<string>('');
-  
-  const { messages, badgeMap, twitchState, startOauthConnect, startWebsocket, setManualTwitchState, clearManualTwitchState, isSyncing } = useTwitchOauth();
+
+  const { messages, badgeMap, twitchState, startOauthConnect, startWebsocket, clearTwitchState, isSyncing } = useTwitchOauth();
   const scrollRef = useRef<HTMLDivElement>(null); // 新增滾動容器的 ref
   const scrollTimerRef = useRef<number | null>(null); // 延遲滾動的計時器
 
@@ -74,7 +69,7 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
               <div className="chatroom-topbar-info">
                 <span>User: {twitchState.display_name} ({twitchState.id})</span>
                 <button
-                  onClick={clearManualTwitchState}
+                  onClick={clearTwitchState}
                   className="chatroom-clear-button"
                   title="Clear Twitch State"
                 >
@@ -139,74 +134,6 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
             >
             Connect by oauth
           </button>
-          </div>
-          
-          <div className="chatroom-or">OR</div>
-          
-          
-          {showManualInput && (
-            <div className="chatroom-manual-inputs">
-              <input
-                type="text"
-                placeholder="Access Token"
-                value={manualAccessToken}
-                onChange={(e) => setManualAccessToken(e.target.value)}
-              
-              />
-              <input
-                type="text"
-                placeholder="User ID"
-                value={manualUserId}
-                onChange={(e) => setManualUserId(e.target.value)}
-              
-              />
-              <input
-                type="text"
-                placeholder="User Name"
-                value={manualUserName}
-                onChange={(e) => setManualUserName(e.target.value)}
-              
-              />
-            </div>
-          )}
-          <div className="chatroom-buttons-row">
-            <button 
-              className="button" 
-              onClick={() => setShowManualInput(!showManualInput)}
-            >
-              {showManualInput ? 'Manual' : 'Twitch State'}
-            </button>
-            {showManualInput && 
-              <button
-                className="button"
-                onClick={() => {
-                  if (manualAccessToken && manualUserId && manualUserName) {
-                    setManualTwitchState({
-                      access_token: manualAccessToken,
-                      id: manualUserId,
-                      display_name: manualUserName,
-                      login: manualUserName.toLowerCase(),
-                      scope: 'chat:read',
-                      token_type: 'bearer',
-                      broadcaster_type: '',
-                      created_at: new Date().toISOString(),
-                      description: '',
-                      offline_image_url: '',
-                      profile_image_url: '',
-                      type: '',
-                      view_count: 0
-                    });
-                    setShowManualInput(false);
-                    setManualAccessToken('');
-                    setManualUserId('');
-                    setManualUserName('');
-                  }
-                }}
-                disabled={!manualAccessToken || !manualUserId || !manualUserName}
-              >
-                Save
-              </button>
-            }
           </div>
         </div>
       )}

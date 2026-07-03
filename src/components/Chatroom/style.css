@@ -65,32 +65,12 @@
   font-size: 12px;
 }
 
-.chatroom-buttons-row {
-  margin-top: 16px;
-}
-
-.chatroom-manual-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.chatroom-manual-inputs input {
-  font-size: 12px;
-}
-
 .chat-message-wrapper {
   margin: 4px 0;
 }
 
 .chatroom-connect-button {
   margin-bottom: 10px;
-}
-
-.chatroom-or {
-  margin: 10px 0;
-  color: #888;
-  font-size: 12px;
 }
 
 .chat-line {

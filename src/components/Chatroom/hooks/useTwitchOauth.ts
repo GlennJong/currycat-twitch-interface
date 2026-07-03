@@ -34,30 +34,15 @@ function useTwitchOauth(maxMessage: number = 15) {
   const isWsConnectedRef = useRef<boolean>(false);
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const desiredSyncRef = useRef<boolean>(false);
 
   useEffect(() => {
     twitchStateRef.current = twitchState;
   }, [twitchState]);
 
-  // If a remote request to start syncing exists, start when twitchState becomes available
-  useEffect(() => {
-    if (desiredSyncRef.current && twitchState) {
-      startWebsocket();
-    }
-  }, [twitchState]);
-
-  // Clear manual twitch state
-  const clearManualTwitchState = useCallback(() => {
+  // Clear current twitch state in memory
+  const clearTwitchState = useCallback(() => {
     setTwitchState(undefined);
   }, []);
-
-  // Set manual twitch state
-  const setManualTwitchState = useCallback((manualState: Partial<TwitchOauthLoginState & TwitchUserState>) => {
-    const currentState = twitchState || {} as TwitchOauthLoginState & TwitchUserState;
-    const newState = { ...currentState, ...manualState };
-    setTwitchState(newState);
-  }, [twitchState]);
 
   // Get twitch login state only from OAuth querystring
   const handleGetTwitchState = useCallback(async () => {
@@ -76,7 +61,7 @@ function useTwitchOauth(maxMessage: number = 15) {
     handleGetTwitchState();
   }, [handleGetTwitchState]);
 
-  // Listen for sync-chat updates from other windows (dock/overlay)
+  // Listen for one-shot sync trigger from other windows (dock/overlay)
   useEffect(() => {
     let bc: BroadcastChannel | null = null;
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
@@ -84,15 +69,9 @@ function useTwitchOauth(maxMessage: number = 15) {
       bc.onmessage = (ev) => {
         if (!ev.data) return;
         if (ev.data.source && ev.data.source === instanceIdRef.current) return;
-        if (ev.data.type === 'sync-chat') {
+        if (ev.data.type === 'sync-chat-trigger') {
           try {
-            const v = !!ev.data.payload;
-            desiredSyncRef.current = v;
-            if (v) {
-              if (twitchStateRef.current) startWebsocket();
-            } else {
-              stopWebsocket();
-            }
+            if (twitchStateRef.current) startWebsocket();
           } catch {}
         }
       };
@@ -110,6 +89,10 @@ function useTwitchOauth(maxMessage: number = 15) {
     const { onOpen, onClose, onMessage, onError } = events;
     const currentTwitchState = twitchStateRef.current;
     if (!currentTwitchState) return;
+    if (isWsConnectedRef.current) return;
+    if (websocketRef.current && (websocketRef.current.readyState === WebSocket.OPEN || websocketRef.current.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
 
     const { access_token, id } = currentTwitchState;
     const ws = new WebSocket(TWITCH_WS_URL);
@@ -173,12 +156,7 @@ function useTwitchOauth(maxMessage: number = 15) {
     });
 
     websocketRef.current = ws;
-    // mark syncing requested
-    desiredSyncRef.current = true;
     setIsSyncing(true);
-    if (typeof (window as any).BroadcastChannel !== 'undefined') {
-      try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: true, source: instanceIdRef.current }); bc.close(); } catch {}
-    }
   }
 
   function stopWebsocket() {
@@ -187,18 +165,13 @@ function useTwitchOauth(maxMessage: number = 15) {
     } catch {}
     websocketRef.current = null;
     isWsConnectedRef.current = false;
-    desiredSyncRef.current = false;
     setIsSyncing(false);
-    if (typeof (window as any).BroadcastChannel !== 'undefined') {
-      try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: false, source: instanceIdRef.current }); bc.close(); } catch {}
-    }
   }
 
   return {
     twitchState,
     setTwitchState,
-    setManualTwitchState,
-    clearManualTwitchState,
+    clearTwitchState,
     startOauthConnect,
     startWebsocket,
     stopWebsocket,

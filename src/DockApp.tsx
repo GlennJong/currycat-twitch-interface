@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import useTwitchOauth from '@/components/Chatroom/hooks/useTwitchOauth';
 import './global.css';
 import './DockApp.css';
 import { BackgroundMode, BG_KEY, deleteBackgroundFromDb, readBackgroundFromDb, writeBackgroundToDb } from '@/utils/backgroundStorage';
@@ -11,12 +10,10 @@ const TODO_OPEN_KEY = 'todo-open';
 const CAT_OPEN_KEY = 'cat-open';
 const STORAGE_MASK_KEY = 'currycat.background.mask';
 const DEFAULT_MASK = { x: 80, y: 120, width: 560, height: 540 };
-const ROW_MARGIN_TOP_8: React.CSSProperties = { marginTop: 8 };
 const SECTION_MARGIN_TOP_12: React.CSSProperties = { marginTop: 12 };
 const BG_ROW_STYLE: React.CSSProperties = { alignItems: 'center', gap: 8 };
 const FLEX_GROW_STYLE: React.CSSProperties = { flex: 1 };
 const USER_LABEL_STYLE: React.CSSProperties = { marginLeft: 12 };
-const USER_NAME_STYLE: React.CSSProperties = { fontWeight: 700 };
 
 function postBanner(value: string) {
   try {
@@ -81,12 +78,6 @@ export default function DockApp() {
 
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const postChannelRef = useRef<BroadcastChannel | null>(null);
-  const { startOauthConnect, setManualTwitchState, twitchState } = useTwitchOauth();
-  const [syncChat, setSyncChat] = useState<boolean>(false);
-  const [manualAccessToken, setManualAccessToken] = useState<string>('');
-  const [manualUserId, setManualUserId] = useState<string>('');
-  const [manualUserName, setManualUserName] = useState<string>('');
-
   const postDockMessage = (type: string, payload: unknown) => {
     try {
       if (typeof (window as any).BroadcastChannel === 'undefined') return;
@@ -196,9 +187,6 @@ export default function DockApp() {
             setDraftMask(m ? { ...m } : null);
             localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m));
           } catch (e) { console.error(e) }
-        }
-        if (ev.data.type === 'sync-chat') {
-          try { const v = !!ev.data.payload; setSyncChat(v); } catch (e) { console.error(e) }
         }
       };
     }
@@ -376,13 +364,11 @@ export default function DockApp() {
     }
   };
 
-  const toggleSyncChat = (enable?: boolean) => {
-    const next = typeof enable === 'boolean' ? enable : !syncChat;
+  const triggerSyncChat = () => {
     try {
-      setSyncChat(next);
-      postDockMessage('sync-chat', next);
+      postDockMessage('sync-chat-trigger', { at: Date.now() });
     } catch (e) {
-      console.error('toggleSyncChat error', e);
+      console.error('triggerSyncChat error', e);
     }
   };
 
@@ -420,57 +406,9 @@ export default function DockApp() {
 
       <div className="dock-section">
         <div className="dock-row">
-          <button className="small" onClick={() => startOauthConnect()}>Connect Twitch (OAuth)</button>
+          <button className="small" onClick={triggerSyncChat}>Sync Chat Message</button>
           <div style={USER_LABEL_STYLE}>
-            {twitchState ? <span style={USER_NAME_STYLE}>User: {twitchState.display_name} ({twitchState.id})</span> : <span className="dock-note">Not connected</span>}
-          </div>
-        </div>
-        <div className="dock-row" style={ROW_MARGIN_TOP_8}>
-          <button className="small" onClick={() => toggleSyncChat(true)}>Sync Chat Message</button>
-        </div>
-        <div style={ROW_MARGIN_TOP_8}>
-          <div className="dock-row">
-            <label className="dock-label">Access Token</label>
-            <input type="text" value={manualAccessToken} onChange={(e) => setManualAccessToken(e.target.value)} className="dock-input" />
-          </div>
-          <div className="dock-row">
-            <label className="dock-label">User ID</label>
-            <input type="text" value={manualUserId} onChange={(e) => setManualUserId(e.target.value)} className="dock-input" />
-          </div>
-          <div className="dock-row">
-            <label className="dock-label">User Name</label>
-            <input type="text" value={manualUserName} onChange={(e) => setManualUserName(e.target.value)} className="dock-input" />
-          </div>
-          <div className="dock-row" style={ROW_MARGIN_TOP_8}>
-            <button
-              className="small"
-              onClick={() => {
-                if (!setManualTwitchState) return;
-                if (manualAccessToken && manualUserId && manualUserName) {
-                  setManualTwitchState({
-                    access_token: manualAccessToken,
-                    id: manualUserId,
-                    display_name: manualUserName,
-                    login: manualUserName.toLowerCase(),
-                    scope: 'chat:read',
-                    token_type: 'bearer',
-                    broadcaster_type: '',
-                    created_at: new Date().toISOString(),
-                    description: '',
-                    offline_image_url: '',
-                    profile_image_url: '',
-                    type: '',
-                    view_count: 0
-                  });
-                  setManualAccessToken('');
-                  setManualUserId('');
-                  setManualUserName('');
-                }
-              }}
-              disabled={!manualAccessToken || !manualUserId || !manualUserName}
-            >
-              Save Twitch State
-            </button>
+            <span className="dock-note">Triggers MainScreen chat sync once per click</span>
           </div>
         </div>
       </div>

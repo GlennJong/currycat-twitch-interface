@@ -25,11 +25,14 @@ export function openTwitchOauthLogin(client_id: string, redirect_uri: string) {
 export function getTwitchLoginStateFromQueryString():
   | TwitchOauthLoginState
   | undefined {
-  const queryString = window.location.href.split("#")[1];
-  if (typeof queryString !== "undefined") {
-    const result = parseQueryString<TwitchOauthLoginState>(queryString);
-    return result;
-  }
+  const search = window.location.search?.replace(/^\?/, "") || "";
+  const hash = window.location.hash?.replace(/^#/, "") || "";
+  const queryString = search || hash;
+  if (!queryString) return;
+
+  const result = parseQueryString<TwitchOauthLoginState>(queryString);
+  if (!result?.access_token) return;
+  return result;
 }
 
 export async function getTwitchUserProfile(
