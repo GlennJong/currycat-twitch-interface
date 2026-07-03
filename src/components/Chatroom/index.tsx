@@ -132,12 +132,14 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
             <div className="chatroom-empty-note">
             Before connect to your TWITCH APP, please fill <b>client_id</b> and <b>redirect_uri</b> in .env file.
           </div>
+          <div className="chatroom-connect-button">
             <button 
-              className="button chatroom-connect-button" 
+              className="button" 
               onClick={() => startOauthConnect()}
             >
             Connect by oauth
           </button>
+          </div>
           
           <div className="chatroom-or">OR</div>
           

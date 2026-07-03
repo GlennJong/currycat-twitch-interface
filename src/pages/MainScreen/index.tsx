@@ -6,22 +6,27 @@ import { useEffect, useRef, useState } from "react";
 import { Cat } from "./Cat";
 // import Portrait, { PortraitRef } from '@/components/Portrait';
 // import { FreePixelWindow } from '@glennjong/pixel-window';
-import Checkbox from '@/components/Checkbox/index';
 import FlexibleBackground from '@/components/FlexibleBackground';
 import { FreePixelWindow } from '@glennjong/pixel-window';
 import { Color } from '@/constants';
+import { BackgroundMode, readBackgroundFromDb } from '@/utils/backgroundStorage';
 // import { Color } from '@/constants';
 // import Dialogue from '@/components/Dialogue';
 
 function MainScreen() {
+  const BANNER_KEY = 'currycat.dockMessage';
   // const [ isPortraitOpen, setIsPortraitOpen ] = useState(true);
   // const [ isPortraitVoiceDetectOpen, setIsPortraitVoiceDetectOpen ] = useState(false);
+  const [ banner, setBanner ] = useState<string>(() => {
+    try { return localStorage.getItem(BANNER_KEY) || ''; } catch { return ''; }
+  });
   const [ isCatOpen, setIsCatOpen ] = useState<boolean>(() => {
     try { const v = localStorage.getItem('cat-open'); return v === null ? true : v === '1'; } catch { return true; }
   });
-  const [ isBackgroundControlDIsplay, setIsBackgroundControlDIsplay ] = useState(false);
+  const [ backgroundMode, setBackgroundMode ] = useState<BackgroundMode>('repeat');
+  const [ backgroundImageBlob, setBackgroundImageBlob ] = useState<Blob | null>(null);
   const [ backgroundImageUrl, setBackgroundImageUrl ] = useState('');
-  const [ backgroundImageInput, setBackgroundImageInput ] = useState('');
+  const backgroundObjectUrlRef = useRef<string | null>(null);
   const STORAGE_MASK_KEY = 'currycat.background.mask';
   const [mask, setMask] = useState(() => {
     try {
@@ -72,21 +77,66 @@ function MainScreen() {
       }
     }
   }
-  
+
+  const releaseCurrentBackgroundObjectUrl = () => {
+    if (backgroundObjectUrlRef.current) {
+      URL.revokeObjectURL(backgroundObjectUrlRef.current);
+      backgroundObjectUrlRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    releaseCurrentBackgroundObjectUrl();
+    if (!backgroundImageBlob) {
+      setBackgroundImageUrl('');
+      return;
+    }
+    const objectUrl = URL.createObjectURL(backgroundImageBlob);
+    backgroundObjectUrlRef.current = objectUrl;
+    setBackgroundImageUrl(objectUrl);
+    return () => {
+      releaseCurrentBackgroundObjectUrl();
+    };
+  }, [backgroundImageBlob]);
+
   useEffect(() => {
     if (isCatOpen) {
       handleStartCat();
     } else {
       handleDestroyCat();
     }
-  }, [isCatOpen])
+  }, [isCatOpen]);
+
+  const backgroundStyle = backgroundImageUrl
+    ? (backgroundMode === 'cover' || backgroundMode === 'contain')
+      ? `url("${backgroundImageUrl}") center / ${backgroundMode}`
+      : backgroundMode === 'repeat'
+        ? `url("${backgroundImageUrl}") center center repeat`
+        : `url("${backgroundImageUrl}") left top no-repeat`
+    : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
 
   // Listen for dock messages to update mask
   useEffect(() => {
     let bc: BroadcastChannel | null = null;
+    const loadBackground = async () => {
+      try {
+        const saved = await readBackgroundFromDb();
+        if (!saved) return;
+        setBackgroundImageBlob(saved.blob);
+        setBackgroundMode(saved.mode || 'repeat');
+      } catch {
+        // Ignore restore errors.
+      }
+    };
+
+    loadBackground();
+
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
       bc = new BroadcastChannel('currycat-dock');
       bc.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'background-updated') {
+          loadBackground();
+        }
         if (ev.data && ev.data.type === 'set-mask') {
           const m = ev.data.payload;
           try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch {}
@@ -97,6 +147,9 @@ function MainScreen() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_MASK_KEY) {
         try { setMask(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+      }
+      if (e.key === 'currycat.background.updated') {
+        loadBackground();
       }
     };
     window.addEventListener('storage', onStorage);
@@ -110,6 +163,9 @@ function MainScreen() {
   // Listen for dock open/close commands for TodoList
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
+      if (e.key === BANNER_KEY) {
+        setBanner(e.newValue || '');
+      }
       if (e.key === 'todo-open') {
         setIsTodoListOpen(e.newValue === '1');
         setStoredTodoOpen(e.newValue);
@@ -123,6 +179,9 @@ function MainScreen() {
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
       bc = new BroadcastChannel('currycat-dock');
       bc.onmessage = (ev) => {
+          if (ev.data && ev.data.type === 'dockMessage') {
+            setBanner(ev.data.payload || '');
+          }
           if (ev.data && ev.data.type === 'todo-open') {
             setIsTodoListOpen(!!ev.data.payload);
             setStoredTodoOpen(ev.data.payload ? '1' : '0');
@@ -162,11 +221,7 @@ function MainScreen() {
             height: '100vh',
             zIndex: 0,
           }}
-          background={
-            backgroundImageUrl
-              ? `url("${backgroundImageUrl}") center repeat`
-              : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-          }
+          background={backgroundStyle}
           defaultMaskWidth={560}
           defaultMaskHeight={540}
           defaultMaskPosition={{ top: 120, left: 80 }}
@@ -190,6 +245,29 @@ function MainScreen() {
 
           <Timer />
         </div>
+        {banner && (
+          <FreePixelWindow
+            name="banner"
+            pixel={32}
+            stroke={Color.BlackDark}
+            frame={Color.WhiteLight}
+            background={Color.WhiteLight}
+            zIndex={1000}
+          >
+            <p style={{
+              display: 'flex',
+              marginTop: '0',
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+              fontSize: '24px',
+              textAlign: 'center',
+              fontFamily: 'BoutiqueBitmap'
+            }}>
+              {banner}
+            </p>
+          </FreePixelWindow>
+        )}
         {/* Floating TodoList (overlay) */}
         {isTodoListOpen && (
           <FreePixelWindow
@@ -199,7 +277,7 @@ function MainScreen() {
             stroke={Color.BlackDark}
             frame={Color.WhiteLight}
             background={Color.WhiteLight}
-            zIndex={9999}
+            zIndex={999}
           >
             <div style={{ width: '120px' }}>
               <TodoList showInput={false} />
@@ -214,39 +292,7 @@ function MainScreen() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 24px', height: '24px' }}>
-          <Checkbox
-            theme="light"
-            checked={isBackgroundControlDIsplay}
-            label="BACKGROUND"
-            onChange={(checked) => setIsBackgroundControlDIsplay(checked)}
-          />
-          { isBackgroundControlDIsplay &&
-            <div style={{ position: 'relative', display: 'flex', gap: 12 }}>
-              <input
-                className="dark"
-                type="text"
-                placeholder="Background image URL"
-                value={backgroundImageInput}
-                onChange={(e) => setBackgroundImageInput(e.target.value)}
-                style={{ width: 320 }}
-              />
-              <button
-                className="dark"
-                onClick={() => setBackgroundImageUrl(backgroundImageInput.trim())}
-              >
-                套用
-              </button>
-              <button
-                className="dark"
-                onClick={() => {
-                  setBackgroundImageInput('');
-                  setBackgroundImageUrl('');
-                }}
-              >
-                清除
-              </button>
-            </div>
-          }
+          <span style={{ color: Color.WhiteLight }}>Background controlled by DockApp</span>
         </div>
 
         {/* <div className="bottom">

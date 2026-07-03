@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import useTwitchOauth from '@/components/Chatroom/hooks/useTwitchOauth';
 import './global.css';
 import './DockApp.css';
+import { BackgroundMode, BG_KEY, deleteBackgroundFromDb, readBackgroundFromDb, writeBackgroundToDb } from '@/utils/backgroundStorage';
 
 const BANNER_KEY = 'currycat.dockMessage';
 const TIMER_KEY = 'timer-state';
@@ -49,6 +50,7 @@ function postTimer(state: { inputTime?: string; duration?: number; remaining: nu
 
 export default function DockApp() {
   const [ banner, setBanner ] = useState<string>(() => localStorage.getItem(BANNER_KEY) || '');
+  const [ bannerInput, setBannerInput ] = useState<string>(() => localStorage.getItem(BANNER_KEY) || '');
   const [minutes, setMinutes] = useState<number>(1);
   const [todos, setTodos] = useState<{id:number; text:string; completed:boolean}[]>(() => {
     try { const s = localStorage.getItem(TODO_KEY); return s ? JSON.parse(s) : []; } catch { return []; }
@@ -66,6 +68,10 @@ export default function DockApp() {
   const [catOpen, setCatOpen] = useState<boolean>(() => {
     try { const v = localStorage.getItem(CAT_OPEN_KEY); return v === null ? true : v === '1'; } catch { return true; }
   });
+  const [backgroundImageInput, setBackgroundImageInput] = useState<string>('');
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('repeat');
+  const [backgroundError, setBackgroundError] = useState<string>('');
+  const [backgroundStatus, setBackgroundStatus] = useState<string>('');
 
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const { startOauthConnect, setManualTwitchState, twitchState } = useTwitchOauth();
@@ -75,6 +81,32 @@ export default function DockApp() {
   const [manualAccessToken, setManualAccessToken] = useState<string>('');
   const [manualUserId, setManualUserId] = useState<string>('');
   const [manualUserName, setManualUserName] = useState<string>('');
+
+  useEffect(() => {
+    const loadBackground = async () => {
+      try {
+        const saved = await readBackgroundFromDb();
+        if (!saved) return;
+        setBackgroundImageInput(saved.sourceUrl);
+        setBackgroundMode(saved.mode);
+      } catch (e) {
+        console.error('loadBackground error', e);
+      }
+    };
+
+    loadBackground();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'currycat.background.updated') {
+        loadBackground();
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -209,9 +241,88 @@ export default function DockApp() {
     } catch (e) { console.error(e) }
   };
 
+  const notifyBackgroundUpdate = () => {
+    try {
+      if (typeof (window as any).BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('currycat-dock');
+        bc.postMessage({ type: 'background-updated', source: instanceIdRef.current });
+        bc.close();
+      }
+      localStorage.setItem('currycat.background.updated', String(Date.now()));
+    } catch (e) {
+      console.error('notifyBackgroundUpdate error', e);
+    }
+  };
+
+  const saveBackgroundByUrl = async (sourceUrl: string) => {
+    setBackgroundError('');
+    try {
+      const res = await fetch(sourceUrl);
+      if (!res.ok) throw new Error('Failed to fetch image');
+      const blob = await res.blob();
+      await writeBackgroundToDb({ id: BG_KEY, blob, sourceUrl, mode: backgroundMode });
+      setBackgroundStatus(`Saved from URL: ${sourceUrl}`);
+      setBackgroundImageInput(sourceUrl);
+      notifyBackgroundUpdate();
+    } catch (error) {
+      setBackgroundError((error as Error).message || 'Save failed');
+      throw error;
+    }
+  };
+
+  const saveBackgroundByFile = async (file: File) => {
+    setBackgroundError('');
+    try {
+      const sourceUrl = `file://${file.name}`;
+      await writeBackgroundToDb({ id: BG_KEY, blob: file, sourceUrl, mode: backgroundMode });
+      setBackgroundStatus(`Saved from file: ${file.name}`);
+      setBackgroundImageInput(file.name);
+      notifyBackgroundUpdate();
+    } catch (error) {
+      setBackgroundError((error as Error).message || 'Save failed');
+      throw error;
+    }
+  };
+
+  const clearBackground = async () => {
+    setBackgroundError('');
+    try {
+      await deleteBackgroundFromDb();
+      setBackgroundStatus('Background cleared');
+      setBackgroundImageInput('');
+      notifyBackgroundUpdate();
+    } catch (error) {
+      setBackgroundError((error as Error).message || 'Clear failed');
+      throw error;
+    }
+  };
+
+  const applyBackgroundMode = async (mode: BackgroundMode) => {
+    setBackgroundError('');
+    setBackgroundMode(mode);
+    try {
+      const saved = await readBackgroundFromDb();
+      if (!saved) {
+        setBackgroundStatus('Mode selected. Save a background image to apply it.');
+        return;
+      }
+      await writeBackgroundToDb({
+        id: BG_KEY,
+        blob: saved.blob,
+        sourceUrl: saved.sourceUrl,
+        mode,
+      });
+      setBackgroundStatus(`Background mode set: ${mode}`);
+      notifyBackgroundUpdate();
+    } catch (error) {
+      setBackgroundError((error as Error).message || 'Failed to apply mode');
+    }
+  };
+
   const toggleBanner = () => {
-    const next = banner ? '' : 'Hello from Dock';
+    const next = banner ? '' : (bannerInput.trim() || 'Hello from Dock');
     setBanner(next);
+    if (!banner) setBannerInput(next);
     postBanner(next);
   };
 
@@ -269,11 +380,19 @@ export default function DockApp() {
       <p className="dock-desc">Use this dock to control the on-stream banner and timer.</p>
 
       <div className="dock-controls">
+        <input
+          type="text"
+          className="dock-input"
+          value={bannerInput}
+          onChange={(e) => setBannerInput(e.target.value)}
+          placeholder="Banner text"
+        />
         <button onClick={toggleBanner} className="small">
           {banner ? 'Clear Banner' : 'Show Banner'}
         </button>
         <div className="dock-banner-preview">{banner || '<empty>'}</div>
       </div>
+
 
       <div className="dock-section">
         <div className="dock-row">
@@ -283,8 +402,7 @@ export default function DockApp() {
           </div>
         </div>
         <div className="dock-row" style={{ marginTop: 8 }}>
-          <button className="small" onClick={() => toggleSyncChat()}>{syncChat ? 'Stop Sync Chat' : 'Sync Chat Message'}</button>
-          <div style={{ marginLeft: 12 }} className="dock-note">{syncChat ? 'Syncing across windows' : 'Not syncing'}</div>
+          <button className="small" onClick={() => toggleSyncChat(true)}>Sync Chat Message</button>
         </div>
         <div style={{ marginTop: 8 }}>
           <div className="dock-row">
@@ -351,9 +469,47 @@ export default function DockApp() {
       </div>
 
       <div className="dock-section" style={{ marginTop: 12 }}>
-
-      <div className="dock-section" style={{ marginTop: 12 }}>
         <div>Mask</div>
+        <div className="dock-row">
+          <label className="dock-label">Background URL</label>
+          <input
+            type="text"
+            className="dock-input"
+            value={backgroundImageInput}
+            onChange={(e) => setBackgroundImageInput(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+        <div className="dock-row" style={{ alignItems: 'center', gap: 8 }}>
+          <label className="dock-label">Mode</label>
+          <select
+            className="dock-input"
+            value={backgroundMode}
+            onChange={async (e) => {
+              await applyBackgroundMode(e.target.value as BackgroundMode);
+            }}
+          >
+            <option value="normal">normal</option>
+            <option value="repeat">repeat</option>
+            <option value="cover">cover</option>
+            <option value="contain">contain</option>
+          </select>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              await saveBackgroundByFile(file);
+            }}
+            className="dock-input"
+            style={{ flex: 1 }}
+          />
+        </div>
+        <div className="dock-row">
+          <button className="small" onClick={async () => { if (backgroundImageInput.trim()) await saveBackgroundByUrl(backgroundImageInput.trim()); }}>Save Background</button>
+          <button className="small" onClick={clearBackground}>Clear Background</button>
+        </div>
         <div className="dock-row">
           <label className="dock-label">x</label>
           <input
@@ -375,31 +531,33 @@ export default function DockApp() {
           />
         </div>
 
-          <div className="dock-row">
-            <label className="dock-label">w</label>
-            <input
-              type="number"
-              value={draftMask ? Math.round(draftMask.width) : ''}
-              onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), width: Number(e.target.value) })}
-              onBlur={() => draftMask && broadcastMask(draftMask)}
-              onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
-              className="dock-number"
-            />
-            <label className="dock-label">h</label>
-            <input
-              type="number"
-              value={draftMask ? Math.round(draftMask.height) : ''}
-              onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), height: Number(e.target.value) })}
-              onBlur={() => draftMask && broadcastMask(draftMask)}
-              onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
-              className="dock-number"
-            />
-          </div>
-
-          <div className="dock-row">
-            <button className="small" onClick={() => broadcastMask({ x: 80, y: 120, width: 560, height: 540 })}>Create/Reset Mask</button>
-          </div>
+        <div className="dock-row">
+          <label className="dock-label">w</label>
+          <input
+            type="number"
+            value={draftMask ? Math.round(draftMask.width) : ''}
+            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), width: Number(e.target.value) })}
+            onBlur={() => draftMask && broadcastMask(draftMask)}
+            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            className="dock-number"
+          />
+          <label className="dock-label">h</label>
+          <input
+            type="number"
+            value={draftMask ? Math.round(draftMask.height) : ''}
+            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), height: Number(e.target.value) })}
+            onBlur={() => draftMask && broadcastMask(draftMask)}
+            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            className="dock-number"
+          />
         </div>
+
+        <div className="dock-row">
+          <button className="small" onClick={() => broadcastMask({ x: 80, y: 120, width: 560, height: 540 })}>Create/Reset Mask</button>
+        </div>
+      </div>
+
+      <div className="dock-section" style={{ marginTop: 12 }}>
         
         <div className="dock-row">
           <input type="checkbox" id="cat" checked={catOpen} onChange={(e) => setCatOpenState(e.currentTarget.checked)} />
@@ -410,7 +568,6 @@ export default function DockApp() {
           <input type="checkbox" id="todolist" checked={todoOpen} onChange={(e) => setTodoOpenState(e.currentTarget.checked)} />
           <label htmlFor="todolist" className="dock-note">{todoOpen ? 'TodoList: enabled' : 'TodoList: disabled'}</label>
         </div>
-
 
         <div className="dock-row">
           <input

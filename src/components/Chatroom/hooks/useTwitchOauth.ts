@@ -15,7 +15,7 @@ const MANUAL_TWITCH_STATE_KEY = "manual_twitch_state";
 
 // constants
 const client_id = import.meta.env["VITE_TWITCH_CLIENT_ID"];
-const redirect_uri = import.meta.env["VITE_TWITCH_OAUTH_REDIRECT_URI"];
+const redirect_uri = window.location.href || import.meta.env["VITE_TWITCH_OAUTH_REDIRECT_URI"];
 
 type WsEventHandler<T> =
   | {
@@ -34,10 +34,15 @@ function useTwitchOauth(maxMessage: number = 15) {
 
   const receivedMsgRef = useRef<TwitchChatEntry[]>([]);
   const websocketRef = useRef<WebSocket>(null);
+  const twitchStateRef = useRef<(TwitchOauthLoginState & TwitchUserState) | undefined>(undefined);
   const isWsConnectedRef = useRef<boolean>(false);
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const desiredSyncRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    twitchStateRef.current = twitchState;
+  }, [twitchState]);
 
   // Save manual twitch state to localStorage
   const saveManualTwitchState = useCallback((state: TwitchOauthLoginState & TwitchUserState) => {
@@ -133,7 +138,7 @@ function useTwitchOauth(maxMessage: number = 15) {
             desiredSyncRef.current = v;
             try { localStorage.setItem('currycat.syncChat', v ? '1' : '0'); } catch {}
             if (v) {
-              if (twitchState) startWebsocket();
+              if (twitchStateRef.current) startWebsocket();
             } else {
               stopWebsocket();
             }
@@ -151,7 +156,7 @@ function useTwitchOauth(maxMessage: number = 15) {
           const v = e.newValue === '1';
           desiredSyncRef.current = v;
           if (v) {
-            if (twitchState) startWebsocket();
+            if (twitchStateRef.current) startWebsocket();
           } else {
             stopWebsocket();
           }
@@ -172,9 +177,10 @@ function useTwitchOauth(maxMessage: number = 15) {
 
   function startWebsocket(events: WsEventHandler<TwitchWsMessagePayload> = {}) {
     const { onOpen, onClose, onMessage, onError } = events;
-    if (!twitchState) return;
+    const currentTwitchState = twitchStateRef.current;
+    if (!currentTwitchState) return;
 
-    const { access_token, id } = twitchState;
+    const { access_token, id } = currentTwitchState;
     const ws = new WebSocket(TWITCH_WS_URL);
     ws.onopen = () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
