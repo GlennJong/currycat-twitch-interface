@@ -14,7 +14,7 @@ export default function DockBanner() {
       bc.onmessage = (ev) => {
         if (ev.data && ev.data.type === 'dockMessage') {
           const v = ev.data.payload || '';
-          try { localStorage.setItem(STORAGE_KEY, v); } catch {}
+          try { localStorage.setItem(STORAGE_KEY, v); } catch (e) { console.error(e) }
           setMessage(v || null);
         }
         // ignore mask messages in banner

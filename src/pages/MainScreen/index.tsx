@@ -38,6 +38,7 @@ function MainScreen() {
   const [ isTodoListOpen, setIsTodoListOpen ] = useState<boolean>(() => {
     try { return localStorage.getItem('todo-open') === '1'; } catch { return false; }
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ _storedTodoOpen, setStoredTodoOpen ] = useState<string | null>(() => {
     try { return localStorage.getItem('todo-open'); } catch { return null; }
   });
@@ -139,14 +140,14 @@ function MainScreen() {
         }
         if (ev.data && ev.data.type === 'set-mask') {
           const m = ev.data.payload;
-          try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch {}
+          try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch (e) { console.error(e) }
           setMask(m);
         }
       };
     }
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_MASK_KEY) {
-        try { setMask(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+        try { setMask(e.newValue ? JSON.parse(e.newValue) : null); } catch (e) { console.error(e) }
       }
       if (e.key === 'currycat.background.updated') {
         loadBackground();
@@ -227,7 +228,7 @@ function MainScreen() {
           defaultMaskPosition={{ top: 120, left: 80 }}
           mask={mask || undefined}
           onMaskChange={(m) => {
-            try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch {}
+            try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch (e) { console.error(e) }
             setMask(m);
             if (typeof (window as any).BroadcastChannel !== 'undefined') {
               const bc = new BroadcastChannel('currycat-dock');

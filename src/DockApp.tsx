@@ -70,8 +70,8 @@ export default function DockApp() {
   });
   const [backgroundImageInput, setBackgroundImageInput] = useState<string>('');
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('repeat');
-  const [backgroundError, setBackgroundError] = useState<string>('');
-  const [backgroundStatus, setBackgroundStatus] = useState<string>('');
+  // const [backgroundError, setBackgroundError] = useState<string>('');
+  // const [backgroundStatus, setBackgroundStatus] = useState<string>('');
 
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const { startOauthConnect, setManualTwitchState, twitchState } = useTwitchOauth();
@@ -175,7 +175,7 @@ export default function DockApp() {
           } catch (e) { console.error(e) }
         }
         if (ev.data.type === 'sync-chat') {
-          try { const v = !!ev.data.payload; setSyncChat(v); try { localStorage.setItem(SYNC_CHAT_KEY, v ? '1' : '0'); } catch {} } catch (e) { console.error(e) }
+          try { const v = !!ev.data.payload; setSyncChat(v); try { localStorage.setItem(SYNC_CHAT_KEY, v ? '1' : '0'); } catch (e) { console.error(e) } } catch (e) { console.error(e) }
         }
       };
     }
@@ -255,55 +255,46 @@ export default function DockApp() {
   };
 
   const saveBackgroundByUrl = async (sourceUrl: string) => {
-    setBackgroundError('');
     try {
       const res = await fetch(sourceUrl);
       if (!res.ok) throw new Error('Failed to fetch image');
       const blob = await res.blob();
       await writeBackgroundToDb({ id: BG_KEY, blob, sourceUrl, mode: backgroundMode });
-      setBackgroundStatus(`Saved from URL: ${sourceUrl}`);
       setBackgroundImageInput(sourceUrl);
       notifyBackgroundUpdate();
     } catch (error) {
-      setBackgroundError((error as Error).message || 'Save failed');
-      throw error;
+      console.error(error)
     }
   };
 
   const saveBackgroundByFile = async (file: File) => {
-    setBackgroundError('');
     try {
       const sourceUrl = `file://${file.name}`;
       await writeBackgroundToDb({ id: BG_KEY, blob: file, sourceUrl, mode: backgroundMode });
-      setBackgroundStatus(`Saved from file: ${file.name}`);
       setBackgroundImageInput(file.name);
       notifyBackgroundUpdate();
     } catch (error) {
-      setBackgroundError((error as Error).message || 'Save failed');
+      console.error(error)
       throw error;
     }
   };
 
   const clearBackground = async () => {
-    setBackgroundError('');
     try {
       await deleteBackgroundFromDb();
-      setBackgroundStatus('Background cleared');
       setBackgroundImageInput('');
       notifyBackgroundUpdate();
     } catch (error) {
-      setBackgroundError((error as Error).message || 'Clear failed');
+      console.error(error)
       throw error;
     }
   };
 
   const applyBackgroundMode = async (mode: BackgroundMode) => {
-    setBackgroundError('');
     setBackgroundMode(mode);
     try {
       const saved = await readBackgroundFromDb();
       if (!saved) {
-        setBackgroundStatus('Mode selected. Save a background image to apply it.');
         return;
       }
       await writeBackgroundToDb({
@@ -312,10 +303,9 @@ export default function DockApp() {
         sourceUrl: saved.sourceUrl,
         mode,
       });
-      setBackgroundStatus(`Background mode set: ${mode}`);
       notifyBackgroundUpdate();
     } catch (error) {
-      setBackgroundError((error as Error).message || 'Failed to apply mode');
+      console.error(error)
     }
   };
 
@@ -517,6 +507,7 @@ export default function DockApp() {
             value={draftMask ? Math.round(draftMask.x) : ''}
             onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), x: Number(e.target.value) })}
             onBlur={() => draftMask && broadcastMask(draftMask)}
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
             className="dock-number"
           />
@@ -526,6 +517,7 @@ export default function DockApp() {
             value={draftMask ? Math.round(draftMask.y) : ''}
             onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), y: Number(e.target.value) })}
             onBlur={() => draftMask && broadcastMask(draftMask)}
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
             className="dock-number"
           />
@@ -538,6 +530,7 @@ export default function DockApp() {
             value={draftMask ? Math.round(draftMask.width) : ''}
             onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), width: Number(e.target.value) })}
             onBlur={() => draftMask && broadcastMask(draftMask)}
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
             className="dock-number"
           />
@@ -547,6 +540,7 @@ export default function DockApp() {
             value={draftMask ? Math.round(draftMask.height) : ''}
             onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), height: Number(e.target.value) })}
             onBlur={() => draftMask && broadcastMask(draftMask)}
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
             className="dock-number"
           />

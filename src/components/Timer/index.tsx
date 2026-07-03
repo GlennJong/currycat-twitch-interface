@@ -89,7 +89,9 @@ const Timer: React.FC = () => {
             setInputTime(s.inputTime || getDefaultInputTime());
             setDuration(s.duration || 60);
             setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
-          } catch {}
+          } catch (e) {
+            console.error(e)
+          }
         }
       };
     }
@@ -101,7 +103,9 @@ const Timer: React.FC = () => {
           setInputTime(s.inputTime || getDefaultInputTime());
           setDuration(s.duration || 60);
           setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
-        } catch {}
+        } catch (e) {
+          console.error(e)
+        }
       }
     };
 

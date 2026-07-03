@@ -35,7 +35,9 @@ const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
         bc.postMessage({ type: 'todo-list', payload: todos, source: instanceIdRef.current });
         bc.close();
       }
-    } catch {}
+    } catch (e) {
+      console.error(e)
+    }
   }, [todos]);
 
   // Listen for external updates (from Dock)
@@ -49,7 +51,9 @@ const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
         if (ev.data.type === 'todo-list' && ev.data.payload) {
           try {
             setTodos(ev.data.payload);
-          } catch {}
+          } catch (e) {
+            console.error(e)
+          }
         }
       };
     }
@@ -59,7 +63,9 @@ const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
         try {
           const parsed = JSON.parse(e.newValue || '[]');
           setTodos(parsed);
-        } catch {}
+        } catch (e) {
+          console.error(e)
+        }
       }
     };
 
