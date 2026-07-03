@@ -15,7 +15,7 @@ const MANUAL_TWITCH_STATE_KEY = "manual_twitch_state";
 
 // constants
 const client_id = import.meta.env["VITE_TWITCH_CLIENT_ID"];
-const redirect_uri = window.location.href || import.meta.env["VITE_TWITCH_OAUTH_REDIRECT_URI"];
+const redirect_uri = import.meta.env["VITE_TWITCH_OAUTH_REDIRECT_URI"];
 
 type WsEventHandler<T> =
   | {
