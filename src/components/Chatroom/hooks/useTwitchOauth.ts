@@ -10,9 +10,6 @@ import {
 import { TWITCH_WS_URL } from "./constants";
 import { BadgeMap, TwitchChatEntry, TwitchOauthLoginState, TwitchUserState, TwitchWsMessagePayload } from "./types";
 
-// localStorage key for manual twitch state
-const MANUAL_TWITCH_STATE_KEY = "manual_twitch_state";
-
 // constants
 const client_id = import.meta.env["VITE_TWITCH_CLIENT_ID"];
 const redirect_uri = import.meta.env["VITE_TWITCH_OAUTH_REDIRECT_URI"];
@@ -43,22 +40,6 @@ function useTwitchOauth(maxMessage: number = 15) {
     twitchStateRef.current = twitchState;
   }, [twitchState]);
 
-  // Save manual twitch state to localStorage
-  const saveManualTwitchState = useCallback((state: TwitchOauthLoginState & TwitchUserState) => {
-    try {
-      localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(state));
-    } catch {}
-
-    // Broadcast the manual state so other windows (dock/overlay) can sync.
-    if (typeof (window as any).BroadcastChannel !== 'undefined') {
-      try {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'manual-twitch-state', payload: state, source: instanceIdRef.current });
-        bc.close();
-      } catch {}
-    }
-  }, []);
-
   // If a remote request to start syncing exists, start when twitchState becomes available
   useEffect(() => {
     if (desiredSyncRef.current && twitchState) {
@@ -66,57 +47,36 @@ function useTwitchOauth(maxMessage: number = 15) {
     }
   }, [twitchState]);
 
-  // Load manual twitch state from localStorage
-  const loadManualTwitchState = useCallback((): (TwitchOauthLoginState & TwitchUserState) | null => {
-    try {
-      const stored = localStorage.getItem(MANUAL_TWITCH_STATE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
   // Clear manual twitch state
   const clearManualTwitchState = useCallback(() => {
-    localStorage.removeItem(MANUAL_TWITCH_STATE_KEY);
     setTwitchState(undefined);
   }, []);
 
   // Set manual twitch state
   const setManualTwitchState = useCallback((manualState: Partial<TwitchOauthLoginState & TwitchUserState>) => {
-    const currentState = twitchState || loadManualTwitchState() || {} as TwitchOauthLoginState & TwitchUserState;
+    const currentState = twitchState || {} as TwitchOauthLoginState & TwitchUserState;
     const newState = { ...currentState, ...manualState };
     setTwitchState(newState);
-    saveManualTwitchState(newState);
-  }, [twitchState, loadManualTwitchState, saveManualTwitchState]);
+  }, [twitchState]);
 
-  // Get twitch login state from querystring or localStorage
+  // Get twitch login state only from OAuth querystring
   const handleGetTwitchState = useCallback(async () => {
-    // First try to get from OAuth querystring
     const loginData = getTwitchLoginStateFromQueryString();
-    if (loginData) {
-      const { access_token } = loginData;
-      const userData = await getTwitchUserProfile(client_id, access_token);
-      if (userData) {
-        const fullState = { ...loginData, ...userData };
-        setTwitchState(fullState);
-        saveManualTwitchState(fullState); // Also save to localStorage
-        return;
-      }
-    }
+    if (!loginData) return;
 
-    // If OAuth failed, try to load from localStorage
-    const manualState = loadManualTwitchState();
-    if (manualState) {
-      setTwitchState(manualState);
-    }
-  }, [saveManualTwitchState, loadManualTwitchState]);
+    const { access_token } = loginData;
+    const userData = await getTwitchUserProfile(client_id, access_token);
+    if (!userData) return;
+
+    const fullState = { ...loginData, ...userData };
+    setTwitchState(fullState);
+  }, []);
 
   useEffect(() => {
     handleGetTwitchState();
   }, [handleGetTwitchState]);
 
-  // Listen for manual twitch state updates from other windows (dock/overlay)
+  // Listen for sync-chat updates from other windows (dock/overlay)
   useEffect(() => {
     let bc: BroadcastChannel | null = null;
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
@@ -124,13 +84,6 @@ function useTwitchOauth(maxMessage: number = 15) {
       bc.onmessage = (ev) => {
         if (!ev.data) return;
         if (ev.data.source && ev.data.source === instanceIdRef.current) return;
-        if (ev.data.type === 'manual-twitch-state' && ev.data.payload) {
-          try {
-            const p = ev.data.payload as TwitchOauthLoginState & TwitchUserState;
-            setTwitchState(p);
-            try { localStorage.setItem(MANUAL_TWITCH_STATE_KEY, JSON.stringify(p)); } catch {}
-          } catch {}
-        }
         if (ev.data.type === 'sync-chat') {
           try {
             const v = !!ev.data.payload;
@@ -144,16 +97,7 @@ function useTwitchOauth(maxMessage: number = 15) {
         }
       };
     }
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === MANUAL_TWITCH_STATE_KEY && e.newValue) {
-        try { const p = JSON.parse(e.newValue); setTwitchState(p); } catch {}
-      }
-    };
-
-    window.addEventListener('storage', onStorage);
     return () => {
-      window.removeEventListener('storage', onStorage);
       if (bc) bc.close();
     };
   }, []);

@@ -88,7 +88,7 @@ function Chatroom({ onInput }: { onInput: (msg: string) => void }) {
                 disabled={isSyncing}
                 onClick={() => {
                   startWebsocket({
-                    onMessage: (msg) => console.log(JSON.stringify(msg))
+                    // onMessage: (msg) => console.log(JSON.stringify(msg))
                   });
                 }}
               >

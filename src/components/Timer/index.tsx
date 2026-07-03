@@ -88,8 +88,8 @@ const Timer: React.FC = () => {
       const nextDuration = s.duration || 60;
       const nextRemaining = typeof s.remaining === 'number' ? s.remaining : null;
 
-      setInputTime((prev) => (prev === nextInputTime ? prev : nextInputTime));
-      setDuration((prev) => (prev === nextDuration ? prev : nextDuration));
+      setInputTime((prev: any) => (prev === nextInputTime ? prev : nextInputTime));
+      setDuration((prev: any) => (prev === nextDuration ? prev : nextDuration));
       setRemaining((prev) => (prev === nextRemaining ? prev : nextRemaining));
     };
 
