@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import useTwitchOauth from '@/components/Chatroom/hooks/useTwitchOauth';
 import './global.css';
 import './DockApp.css';
@@ -10,7 +10,13 @@ const TODO_KEY = 'todos';
 const TODO_OPEN_KEY = 'todo-open';
 const CAT_OPEN_KEY = 'cat-open';
 const STORAGE_MASK_KEY = 'currycat.background.mask';
-const SYNC_CHAT_KEY = 'currycat.syncChat';
+const DEFAULT_MASK = { x: 80, y: 120, width: 560, height: 540 };
+const ROW_MARGIN_TOP_8: React.CSSProperties = { marginTop: 8 };
+const SECTION_MARGIN_TOP_12: React.CSSProperties = { marginTop: 12 };
+const BG_ROW_STYLE: React.CSSProperties = { alignItems: 'center', gap: 8 };
+const FLEX_GROW_STYLE: React.CSSProperties = { flex: 1 };
+const USER_LABEL_STYLE: React.CSSProperties = { marginLeft: 12 };
+const USER_NAME_STYLE: React.CSSProperties = { fontWeight: 700 };
 
 function postBanner(value: string) {
   try {
@@ -74,13 +80,33 @@ export default function DockApp() {
   // const [backgroundStatus, setBackgroundStatus] = useState<string>('');
 
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
+  const postChannelRef = useRef<BroadcastChannel | null>(null);
   const { startOauthConnect, setManualTwitchState, twitchState } = useTwitchOauth();
-  const [syncChat, setSyncChat] = useState<boolean>(() => {
-    try { return localStorage.getItem(SYNC_CHAT_KEY) === '1'; } catch { return false }
-  });
+  const [syncChat, setSyncChat] = useState<boolean>(false);
   const [manualAccessToken, setManualAccessToken] = useState<string>('');
   const [manualUserId, setManualUserId] = useState<string>('');
   const [manualUserName, setManualUserName] = useState<string>('');
+
+  const postDockMessage = (type: string, payload: unknown) => {
+    try {
+      if (typeof (window as any).BroadcastChannel === 'undefined') return;
+      if (!postChannelRef.current) {
+        postChannelRef.current = new BroadcastChannel('currycat-dock');
+      }
+      postChannelRef.current.postMessage({ type, payload, source: instanceIdRef.current });
+    } catch (e) {
+      console.error('postDockMessage error', e);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (postChannelRef.current) {
+        postChannelRef.current.close();
+        postChannelRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadBackground = async () => {
@@ -132,9 +158,6 @@ export default function DockApp() {
       if (e.key === STORAGE_MASK_KEY) {
         try { const m = e.newValue ? JSON.parse(e.newValue) : null; setMask(m); setDraftMask(m ? { ...m } : null); } catch (e) { console.error(e) }
       }
-      if (e.key === SYNC_CHAT_KEY) {
-        try { setSyncChat(e.newValue === '1'); } catch (e) { console.error(e) }
-      }
     };
 
     let bc: BroadcastChannel | null = null;
@@ -175,7 +198,7 @@ export default function DockApp() {
           } catch (e) { console.error(e) }
         }
         if (ev.data.type === 'sync-chat') {
-          try { const v = !!ev.data.payload; setSyncChat(v); try { localStorage.setItem(SYNC_CHAT_KEY, v ? '1' : '0'); } catch (e) { console.error(e) } } catch (e) { console.error(e) }
+          try { const v = !!ev.data.payload; setSyncChat(v); } catch (e) { console.error(e) }
         }
       };
     }
@@ -190,11 +213,7 @@ export default function DockApp() {
   const saveTodos = (next: {id:number; text:string; completed:boolean}[]) => {
     try {
       setTodos(next);
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'todo-list', payload: next, source: instanceIdRef.current });
-        bc.close();
-      }
+      postDockMessage('todo-list', next);
       localStorage.setItem(TODO_KEY, JSON.stringify(next));
     } catch (e) { console.error(e) }
   };
@@ -220,11 +239,7 @@ export default function DockApp() {
   const setTodoOpenState = (open: boolean) => {
     try {
       setTodoOpen(open);
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'todo-open', payload: open, source: instanceIdRef.current });
-        bc.close();
-      }
+      postDockMessage('todo-open', open);
       localStorage.setItem(TODO_OPEN_KEY, open ? '1' : '0');
     } catch (e) { console.error(e) }
   };
@@ -232,22 +247,14 @@ export default function DockApp() {
   const setCatOpenState = (open: boolean) => {
     try {
       setCatOpen(open);
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'cat-open', payload: open, source: instanceIdRef.current });
-        bc.close();
-      }
+      postDockMessage('cat-open', open);
       localStorage.setItem(CAT_OPEN_KEY, open ? '1' : '0');
     } catch (e) { console.error(e) }
   };
 
   const notifyBackgroundUpdate = () => {
     try {
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'background-updated', source: instanceIdRef.current });
-        bc.close();
-      }
+      postDockMessage('background-updated', null);
       localStorage.setItem('currycat.background.updated', String(Date.now()));
     } catch (e) {
       console.error('notifyBackgroundUpdate error', e);
@@ -316,6 +323,30 @@ export default function DockApp() {
     postBanner(next);
   };
 
+  const handleBannerInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setBannerInput(e.target.value);
+  }, []);
+
+  const handleBackgroundInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setBackgroundImageInput(e.target.value);
+  }, []);
+
+  const handleBackgroundModeChange = useCallback(async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    await applyBackgroundMode(e.target.value as BackgroundMode);
+  }, [applyBackgroundMode]);
+
+  const handleBackgroundFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await saveBackgroundByFile(file);
+  }, [saveBackgroundByFile]);
+
+  const handleSaveBackgroundClick = useCallback(async () => {
+    const next = backgroundImageInput.trim();
+    if (!next) return;
+    await saveBackgroundByUrl(next);
+  }, [backgroundImageInput, saveBackgroundByUrl]);
+
   const startTimer = () => {
     const secs = Math.max(1, Math.round(minutes)) * 60;
     postTimer({ remaining: secs, duration: secs, savedAt: Date.now() });
@@ -337,11 +368,7 @@ export default function DockApp() {
     try {
       setMask(m);
       setDraftMask(m ? { ...m } : null);
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'set-mask', payload: m, source: instanceIdRef.current });
-        bc.close();
-      }
+      postDockMessage('set-mask', m);
       localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m));
     } catch (e) {
       console.error('broadcastMask error', e);
@@ -353,15 +380,22 @@ export default function DockApp() {
     const next = typeof enable === 'boolean' ? enable : !syncChat;
     try {
       setSyncChat(next);
-      if (typeof (window as any).BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('currycat-dock');
-        bc.postMessage({ type: 'sync-chat', payload: next, source: instanceIdRef.current });
-        bc.close();
-      }
-      localStorage.setItem(SYNC_CHAT_KEY, next ? '1' : '0');
+      postDockMessage('sync-chat', next);
     } catch (e) {
       console.error('toggleSyncChat error', e);
     }
+  };
+
+  const updateDraftMaskField = (field: 'x' | 'y' | 'width' | 'height', value: number) => {
+    setDraftMask((prev: any) => ({ ...(prev || DEFAULT_MASK), [field]: value }));
+  };
+
+  const commitDraftMask = () => {
+    if (draftMask) broadcastMask(draftMask);
+  };
+
+  const commitDraftMaskOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') commitDraftMask();
   };
 
   return (
@@ -374,7 +408,7 @@ export default function DockApp() {
           type="text"
           className="dock-input"
           value={bannerInput}
-          onChange={(e) => setBannerInput(e.target.value)}
+          onChange={handleBannerInputChange}
           placeholder="Banner text"
         />
         <button onClick={toggleBanner} className="small">
@@ -387,14 +421,14 @@ export default function DockApp() {
       <div className="dock-section">
         <div className="dock-row">
           <button className="small" onClick={() => startOauthConnect()}>Connect Twitch (OAuth)</button>
-          <div style={{ marginLeft: 12 }}>
-            {twitchState ? <span style={{ fontWeight: 700 }}>User: {twitchState.display_name} ({twitchState.id})</span> : <span className="dock-note">Not connected</span>}
+          <div style={USER_LABEL_STYLE}>
+            {twitchState ? <span style={USER_NAME_STYLE}>User: {twitchState.display_name} ({twitchState.id})</span> : <span className="dock-note">Not connected</span>}
           </div>
         </div>
-        <div className="dock-row" style={{ marginTop: 8 }}>
+        <div className="dock-row" style={ROW_MARGIN_TOP_8}>
           <button className="small" onClick={() => toggleSyncChat(true)}>Sync Chat Message</button>
         </div>
-        <div style={{ marginTop: 8 }}>
+        <div style={ROW_MARGIN_TOP_8}>
           <div className="dock-row">
             <label className="dock-label">Access Token</label>
             <input type="text" value={manualAccessToken} onChange={(e) => setManualAccessToken(e.target.value)} className="dock-input" />
@@ -407,7 +441,7 @@ export default function DockApp() {
             <label className="dock-label">User Name</label>
             <input type="text" value={manualUserName} onChange={(e) => setManualUserName(e.target.value)} className="dock-input" />
           </div>
-          <div className="dock-row" style={{ marginTop: 8 }}>
+          <div className="dock-row" style={ROW_MARGIN_TOP_8}>
             <button
               className="small"
               onClick={() => {
@@ -458,7 +492,7 @@ export default function DockApp() {
         <div className="dock-note">Start sets a countdown of the given minutes.</div>
       </div>
 
-      <div className="dock-section" style={{ marginTop: 12 }}>
+      <div className="dock-section" style={SECTION_MARGIN_TOP_12}>
         <div>Mask</div>
         <div className="dock-row">
           <label className="dock-label">Background URL</label>
@@ -466,18 +500,16 @@ export default function DockApp() {
             type="text"
             className="dock-input"
             value={backgroundImageInput}
-            onChange={(e) => setBackgroundImageInput(e.target.value)}
+            onChange={handleBackgroundInputChange}
             placeholder="https://..."
           />
         </div>
-        <div className="dock-row" style={{ alignItems: 'center', gap: 8 }}>
+        <div className="dock-row" style={BG_ROW_STYLE}>
           <label className="dock-label">Mode</label>
           <select
             className="dock-input"
             value={backgroundMode}
-            onChange={async (e) => {
-              await applyBackgroundMode(e.target.value as BackgroundMode);
-            }}
+            onChange={handleBackgroundModeChange}
           >
             <option value="normal">normal</option>
             <option value="repeat">repeat</option>
@@ -487,17 +519,13 @@ export default function DockApp() {
           <input
             type="file"
             accept="image/*"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              await saveBackgroundByFile(file);
-            }}
+            onChange={handleBackgroundFileChange}
             className="dock-input"
-            style={{ flex: 1 }}
+            style={FLEX_GROW_STYLE}
           />
         </div>
         <div className="dock-row">
-          <button className="small" onClick={async () => { if (backgroundImageInput.trim()) await saveBackgroundByUrl(backgroundImageInput.trim()); }}>Save Background</button>
+          <button className="small" onClick={handleSaveBackgroundClick}>Save Background</button>
           <button className="small" onClick={clearBackground}>Clear Background</button>
         </div>
         <div className="dock-row">
@@ -505,20 +533,18 @@ export default function DockApp() {
           <input
             type="number"
             value={draftMask ? Math.round(draftMask.x) : ''}
-            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), x: Number(e.target.value) })}
-            onBlur={() => draftMask && broadcastMask(draftMask)}
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            onChange={(e) => updateDraftMaskField('x', Number(e.target.value))}
+            onBlur={commitDraftMask}
+            onKeyDown={commitDraftMaskOnEnter}
             className="dock-number"
           />
           <label className="dock-label">y</label>
           <input
             type="number"
             value={draftMask ? Math.round(draftMask.y) : ''}
-            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), y: Number(e.target.value) })}
-            onBlur={() => draftMask && broadcastMask(draftMask)}
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            onChange={(e) => updateDraftMaskField('y', Number(e.target.value))}
+            onBlur={commitDraftMask}
+            onKeyDown={commitDraftMaskOnEnter}
             className="dock-number"
           />
         </div>
@@ -528,30 +554,28 @@ export default function DockApp() {
           <input
             type="number"
             value={draftMask ? Math.round(draftMask.width) : ''}
-            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), width: Number(e.target.value) })}
-            onBlur={() => draftMask && broadcastMask(draftMask)}
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            onChange={(e) => updateDraftMaskField('width', Number(e.target.value))}
+            onBlur={commitDraftMask}
+            onKeyDown={commitDraftMaskOnEnter}
             className="dock-number"
           />
           <label className="dock-label">h</label>
           <input
             type="number"
             value={draftMask ? Math.round(draftMask.height) : ''}
-            onChange={(e) => setDraftMask({ ...(draftMask || { x: 80, y: 120, width: 560, height: 540 }), height: Number(e.target.value) })}
-            onBlur={() => draftMask && broadcastMask(draftMask)}
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            onKeyDown={(e) => { if (e.key === 'Enter') draftMask && broadcastMask(draftMask); }}
+            onChange={(e) => updateDraftMaskField('height', Number(e.target.value))}
+            onBlur={commitDraftMask}
+            onKeyDown={commitDraftMaskOnEnter}
             className="dock-number"
           />
         </div>
 
         <div className="dock-row">
-          <button className="small" onClick={() => broadcastMask({ x: 80, y: 120, width: 560, height: 540 })}>Create/Reset Mask</button>
+          <button className="small" onClick={() => broadcastMask(DEFAULT_MASK)}>Create/Reset Mask</button>
         </div>
       </div>
 
-      <div className="dock-section" style={{ marginTop: 12 }}>
+      <div className="dock-section" style={SECTION_MARGIN_TOP_12}>
         
         <div className="dock-row">
           <input type="checkbox" id="cat" checked={catOpen} onChange={(e) => setCatOpenState(e.currentTarget.checked)} />

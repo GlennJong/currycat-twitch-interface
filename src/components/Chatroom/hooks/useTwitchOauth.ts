@@ -30,7 +30,6 @@ function useTwitchOauth(maxMessage: number = 15) {
   const [twitchState, setTwitchState] = useState<TwitchOauthLoginState & TwitchUserState>();
   const [receivedMsg, setReceivedMsg] = useState<TwitchChatEntry[]>([]);
   const [badgeMap, setBadgeMap] = useState<BadgeMap>({});
-  console.log('twitchState', twitchState)
 
   const receivedMsgRef = useRef<TwitchChatEntry[]>([]);
   const websocketRef = useRef<WebSocket>(null);
@@ -136,7 +135,6 @@ function useTwitchOauth(maxMessage: number = 15) {
           try {
             const v = !!ev.data.payload;
             desiredSyncRef.current = v;
-            try { localStorage.setItem('currycat.syncChat', v ? '1' : '0'); } catch {}
             if (v) {
               if (twitchStateRef.current) startWebsocket();
             } else {
@@ -150,17 +148,6 @@ function useTwitchOauth(maxMessage: number = 15) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === MANUAL_TWITCH_STATE_KEY && e.newValue) {
         try { const p = JSON.parse(e.newValue); setTwitchState(p); } catch {}
-      }
-      if (e.key === 'currycat.syncChat') {
-        try {
-          const v = e.newValue === '1';
-          desiredSyncRef.current = v;
-          if (v) {
-            if (twitchStateRef.current) startWebsocket();
-          } else {
-            stopWebsocket();
-          }
-        } catch {}
       }
     };
 
@@ -245,7 +232,6 @@ function useTwitchOauth(maxMessage: number = 15) {
     // mark syncing requested
     desiredSyncRef.current = true;
     setIsSyncing(true);
-    try { localStorage.setItem('currycat.syncChat', '1'); } catch {}
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
       try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: true, source: instanceIdRef.current }); bc.close(); } catch {}
     }
@@ -259,7 +245,6 @@ function useTwitchOauth(maxMessage: number = 15) {
     isWsConnectedRef.current = false;
     desiredSyncRef.current = false;
     setIsSyncing(false);
-    try { localStorage.setItem('currycat.syncChat', '0'); } catch {}
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
       try { const bc = new BroadcastChannel('currycat-dock'); bc.postMessage({ type: 'sync-chat', payload: false, source: instanceIdRef.current }); bc.close(); } catch {}
     }

@@ -49,11 +49,16 @@ function MainScreen() {
   
   // const portraitRef = useRef<PortraitRef>(null);
   const catRef = useRef<Cat>(null);
+  const postChannelRef = useRef<BroadcastChannel | null>(null);
 
   useEffect(() => {
     handleStartCat();
     return () => {
       handleDestroyCat();
+      if (postChannelRef.current) {
+        postChannelRef.current.close();
+        postChannelRef.current = null;
+      }
     }
   }, []);
 
@@ -78,6 +83,18 @@ function MainScreen() {
       }
     }
   }
+
+  const postDockMessage = (type: string, payload: unknown) => {
+    try {
+      if (typeof (window as any).BroadcastChannel === 'undefined') return;
+      if (!postChannelRef.current) {
+        postChannelRef.current = new BroadcastChannel('currycat-dock');
+      }
+      postChannelRef.current.postMessage({ type, payload });
+    } catch (e) {
+      console.error('postDockMessage error', e);
+    }
+  };
 
   const releaseCurrentBackgroundObjectUrl = () => {
     if (backgroundObjectUrlRef.current) {
@@ -230,11 +247,7 @@ function MainScreen() {
           onMaskChange={(m) => {
             try { localStorage.setItem(STORAGE_MASK_KEY, JSON.stringify(m)); } catch (e) { console.error(e) }
             setMask(m);
-            if (typeof (window as any).BroadcastChannel !== 'undefined') {
-              const bc = new BroadcastChannel('currycat-dock');
-              bc.postMessage({ type: 'mask-changed', payload: m });
-              bc.close();
-            }
+            postDockMessage('mask-changed', m);
           }}
         />
         <div style={{

@@ -45,9 +45,10 @@ const Timer: React.FC = () => {
     };
   };
 
-  const [inputTime, setInputTime] = useState(getInitialState().inputTime);
-  const [duration, setDuration] = useState(getInitialState().duration);
-  const [remaining, setRemaining] = useState<number | null>(getInitialState().remaining);
+  const initialStateRef = React.useRef(getInitialState());
+  const [inputTime, setInputTime] = useState(initialStateRef.current.inputTime);
+  const [duration, setDuration] = useState(initialStateRef.current.duration);
+  const [remaining, setRemaining] = useState<number | null>(initialStateRef.current.remaining);
   const [dragging, setDragging] = useState(false);
   // 狀態變動時儲存到 localStorage
   useEffect(() => {
@@ -63,12 +64,15 @@ const Timer: React.FC = () => {
   useEffect(() => {
     if (remaining === null || remaining <= 0) return;
     const timer = setInterval(() => {
-      setRemaining(prev => (prev !== null ? prev - 1 : null));
+      setRemaining((prev) => {
+        if (prev === null) return null;
+        return Math.max(prev - 1, 0);
+      });
     }, 1000);
     return () => {
       clearInterval(timer);
     };
-  }, [remaining]);
+  }, [remaining !== null]);
 
   // 當倒數結束
   useEffect(() => {
@@ -79,16 +83,23 @@ const Timer: React.FC = () => {
 
   // Listen for external timer updates (from Dock via localStorage or BroadcastChannel)
   useEffect(() => {
+    const applyTimerState = (s: { inputTime?: string; duration?: number; remaining?: number | null }) => {
+      const nextInputTime = s.inputTime || getDefaultInputTime();
+      const nextDuration = s.duration || 60;
+      const nextRemaining = typeof s.remaining === 'number' ? s.remaining : null;
+
+      setInputTime((prev) => (prev === nextInputTime ? prev : nextInputTime));
+      setDuration((prev) => (prev === nextDuration ? prev : nextDuration));
+      setRemaining((prev) => (prev === nextRemaining ? prev : nextRemaining));
+    };
+
     let bc: BroadcastChannel | null = null;
     if (typeof (window as any).BroadcastChannel !== 'undefined') {
       bc = new BroadcastChannel('currycat-dock');
       bc.onmessage = (ev) => {
         if (ev.data && ev.data.type === 'timer-state' && ev.data.payload) {
-          const s = ev.data.payload;
           try {
-            setInputTime(s.inputTime || getDefaultInputTime());
-            setDuration(s.duration || 60);
-            setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
+            applyTimerState(ev.data.payload);
           } catch (e) {
             console.error(e)
           }
@@ -99,10 +110,7 @@ const Timer: React.FC = () => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'timer-state' && e.newValue) {
         try {
-          const s = JSON.parse(e.newValue);
-          setInputTime(s.inputTime || getDefaultInputTime());
-          setDuration(s.duration || 60);
-          setRemaining(typeof s.remaining === 'number' ? s.remaining : null);
+          applyTimerState(JSON.parse(e.newValue));
         } catch (e) {
           console.error(e)
         }
