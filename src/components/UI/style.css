@@ -79,19 +79,3 @@ h1 {
 p, span {
   font-size: 20px;
 }
-
-/* Responsive rules for OBS Dock: hide the main overlay in narrow dock windows */
-@media (max-width: 480px) {
-  .main-screen {
-    display: none;
-  }
-  body {
-    overflow: auto;
-  }
-  .button {
-    font-size: 16px;
-  }
-  p, span {
-    font-size: 14px;
-  }
-}

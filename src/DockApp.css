@@ -51,18 +51,22 @@
 
 .dock-number {
   width: 80px;
+  height: 30px;
   padding: 6px 8px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   color: inherit;
+  box-sizing: border-box;
 }
 
 .dock-input {
   flex: 1;
   padding: 6px 8px;
+  height: 30px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   color: inherit;
+  box-sizing: border-box;
 }
 
 .dock-note {
@@ -89,4 +93,32 @@
 .dock-todo-item.completed .todo-text {
   text-decoration: line-through;
   opacity: 0.7;
+}
+
+.dock-mask-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dock-button, .dock-mask-grid-cell {
+  height: 30px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.dock-button:hover, .dock-mask-grid-cell:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dock-button:hover, .dock-mask-grid-cell.active {
+  border-color: #7de2ff;
+  background: rgba(125, 226, 255, 0.15);
+  color: #eafaff;
 }

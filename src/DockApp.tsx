@@ -10,6 +10,11 @@ const TODO_OPEN_KEY = 'todo-open';
 const CAT_OPEN_KEY = 'cat-open';
 const STORAGE_MASK_KEY = 'currycat.background.mask';
 const DEFAULT_MASK = { x: 80, y: 120, width: 560, height: 540 };
+const GRID_LABELS = [
+  ['↖', '↑', '↗'],
+  ['←', '•', '→'],
+  ['↙', '↓', '↘'],
+];
 const BG_ROW_STYLE: React.CSSProperties = { alignItems: 'center', gap: 8 };
 const FLEX_GROW_STYLE: React.CSSProperties = { flex: 1 };
 
@@ -71,6 +76,7 @@ export default function DockApp() {
   });
   const [backgroundImageInput, setBackgroundImageInput] = useState<string>('');
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('repeat');
+  const [pendingBackgroundFile, setPendingBackgroundFile] = useState<File | null>(null);
   // const [backgroundError, setBackgroundError] = useState<string>('');
   // const [backgroundStatus, setBackgroundStatus] = useState<string>('');
 
@@ -102,6 +108,7 @@ export default function DockApp() {
       try {
         const saved = await readBackgroundFromDb();
         if (!saved) return;
+        setPendingBackgroundFile(null);
         setBackgroundImageInput(saved.sourceUrl);
         setBackgroundMode(saved.mode);
       } catch (e) {
@@ -277,6 +284,7 @@ export default function DockApp() {
   const clearBackground = async () => {
     try {
       await deleteBackgroundFromDb();
+      setPendingBackgroundFile(null);
       setBackgroundImageInput('');
       notifyBackgroundUpdate();
     } catch (error) {
@@ -317,6 +325,7 @@ export default function DockApp() {
   }, []);
 
   const handleBackgroundInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingBackgroundFile(null);
     setBackgroundImageInput(e.target.value);
   }, []);
 
@@ -327,14 +336,21 @@ export default function DockApp() {
   const handleBackgroundFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await saveBackgroundByFile(file);
-  }, [saveBackgroundByFile]);
+    setPendingBackgroundFile(file);
+    setBackgroundImageInput(file.name);
+  }, []);
 
   const handleSaveBackgroundClick = useCallback(async () => {
+    if (pendingBackgroundFile) {
+      await saveBackgroundByFile(pendingBackgroundFile);
+      setPendingBackgroundFile(null);
+      return;
+    }
+
     const next = backgroundImageInput.trim();
     if (!next) return;
     await saveBackgroundByUrl(next);
-  }, [backgroundImageInput, saveBackgroundByUrl]);
+  }, [backgroundImageInput, pendingBackgroundFile, saveBackgroundByFile, saveBackgroundByUrl]);
 
   const startTimer = () => {
     const secs = Math.max(1, Math.round(minutes)) * 60;
@@ -377,6 +393,23 @@ export default function DockApp() {
     setDraftMask((prev: any) => ({ ...(prev || DEFAULT_MASK), [field]: value }));
   };
 
+  const nudgeMaskByNineSquare = (row: 0 | 1 | 2, col: 0 | 1 | 2, shiftKey = false) => {
+    // Center button has no behavior.
+    if (row === 1 && col === 1) return;
+
+    const step = shiftKey ? 10 : 1;
+    const base = draftMask || DEFAULT_MASK;
+    const width = Number(base.width) || DEFAULT_MASK.width;
+    const height = Number(base.height) || DEFAULT_MASK.height;
+    const dx = col === 0 ? -step : col === 2 ? step : 0;
+    const dy = row === 0 ? -step : row === 2 ? step : 0;
+    const x = (Number(base.x) || 0) + dx;
+    const y = (Number(base.y) || 0) + dy;
+    const next = { ...base, x, y, width, height };
+    setDraftMask(next);
+    broadcastMask(next);
+  };
+
   const commitDraftMask = () => {
     if (draftMask) broadcastMask(draftMask);
   };
@@ -397,7 +430,7 @@ export default function DockApp() {
             onChange={handleBannerInputChange}
             placeholder="Banner text"
           />
-          <button onClick={toggleBanner} className="small">
+          <button onClick={toggleBanner} className="dock-button">
             {banner ? 'Clear Banner' : 'Show Banner'}
           </button>
         </div>
@@ -414,16 +447,15 @@ export default function DockApp() {
             onChange={(e) => setTimerMinutes(Number(e.target.value || 1))}
             className="dock-number"
           />
-          <button className="small" onClick={startTimer}>Start</button>
+          <button className="dock-button" onClick={startTimer}>START</button>
       
-          <button className="small" onClick={stopTimer}>Stop</button>
+          <button className="dock-button" onClick={stopTimer}>STOP</button>
         </div>
       </div>
 
       <div className="dock-section">
         <div>Background</div>
         <div className="dock-row">
-          <label className="dock-label">Background URL</label>
           <input
             type="text"
             className="dock-input"
@@ -431,9 +463,20 @@ export default function DockApp() {
             onChange={handleBackgroundInputChange}
             placeholder="https://..."
           />
+          <label className="dock-button" htmlFor="background-file-selector">
+            LOCAL FILE
+            <input
+              id="background-file-selector"
+              type="file"
+              accept="image/*"
+              onChange={handleBackgroundFileChange}
+              className="dock-button"
+              style={{...FLEX_GROW_STYLE, display: 'none'}}
+            />
+          </label>
+          <button className="dock-button" onClick={handleSaveBackgroundClick}>SAVE</button>
         </div>
         <div className="dock-row" style={BG_ROW_STYLE}>
-          <label className="dock-label">Mode</label>
           <select
             className="dock-input"
             value={backgroundMode}
@@ -444,42 +487,15 @@ export default function DockApp() {
             <option value="cover">cover</option>
             <option value="contain">contain</option>
           </select>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleBackgroundFileChange}
-            className="dock-input"
-            style={FLEX_GROW_STYLE}
-          />
         </div>
         <div className="dock-row">
-          <button className="small" onClick={handleSaveBackgroundClick}>Save Background</button>
-          <button className="small" onClick={clearBackground}>Clear Background</button>
+          
+          <button className="dock-button" onClick={clearBackground}>CLEAR</button>
         </div>
       </div>
 
       <div className="dock-section">
         <div>Mask</div>
-        <div className="dock-row">
-          <label className="dock-label">x</label>
-          <input
-            type="number"
-            value={draftMask ? Math.round(draftMask.x) : ''}
-            onChange={(e) => updateDraftMaskField('x', Number(e.target.value))}
-            onBlur={commitDraftMask}
-            onKeyDown={commitDraftMaskOnEnter}
-            className="dock-number"
-          />
-          <label className="dock-label">y</label>
-          <input
-            type="number"
-            value={draftMask ? Math.round(draftMask.y) : ''}
-            onChange={(e) => updateDraftMaskField('y', Number(e.target.value))}
-            onBlur={commitDraftMask}
-            onKeyDown={commitDraftMaskOnEnter}
-            className="dock-number"
-          />
-        </div>
 
         <div className="dock-row">
           <label className="dock-label">w</label>
@@ -500,16 +516,35 @@ export default function DockApp() {
             onKeyDown={commitDraftMaskOnEnter}
             className="dock-number"
           />
+          <button className="dock-button" onClick={() => broadcastMask(DEFAULT_MASK)}>RESET</button>
         </div>
 
-        <div className="dock-row">
-          <button className="small" onClick={() => broadcastMask(DEFAULT_MASK)}>Create/Reset Mask</button>
+        <div className="dock-mask-grid" role="group" aria-label="Mask position">
+          {GRID_LABELS.map((labels, row) => (
+            labels.map((label, col) => {
+              const key = `${row}-${col}`;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className="dock-mask-grid-cell"
+                  onClick={(e) => nudgeMaskByNineSquare(row as 0 | 1 | 2, col as 0 | 1 | 2, e.shiftKey)}
+                  title={label}
+                  aria-label={label}
+                  disabled={row === 1 && col === 1}
+                >
+                  {label}
+                </button>
+              );
+            })
+          ))}
         </div>
+
       </div>
       <div className="dock-section">
         <div>Chatroom</div>
         <div className="dock-row">
-          <button className="small" onClick={triggerSyncChat}>Sync Chat Message</button>
+          <button className="dock-button" onClick={triggerSyncChat}>Sync Chat Message</button>
         </div>
       </div>
 
@@ -529,7 +564,7 @@ export default function DockApp() {
             placeholder="Add todo"
             className="dock-input"
           />
-          <button className="small" onClick={addTodo}>Add</button>
+          <button className="dock-button" onClick={addTodo}>ADD</button>
         </div>
 
         <div className="dock-todos">
