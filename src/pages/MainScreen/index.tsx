@@ -26,6 +26,7 @@ function MainScreen() {
   const [ backgroundMode, setBackgroundMode ] = useState<BackgroundMode>('repeat');
   const [ backgroundImageBlob, setBackgroundImageBlob ] = useState<Blob | null>(null);
   const [ backgroundImageUrl, setBackgroundImageUrl ] = useState('');
+
   const backgroundObjectUrlRef = useRef<string | null>(null);
   const STORAGE_MASK_KEY = 'currycat.background.mask';
   const [mask, setMask] = useState(() => {
@@ -139,9 +140,13 @@ function MainScreen() {
     const loadBackground = async () => {
       try {
         const saved = await readBackgroundFromDb();
-        if (!saved) return;
-        setBackgroundImageBlob(saved.blob);
-        setBackgroundMode(saved.mode || 'repeat');
+        if (saved === null) {
+          setBackgroundImageUrl('');
+        }
+        else {
+          setBackgroundImageBlob(saved.blob);
+          setBackgroundMode(saved.mode || 'repeat');
+        }
       } catch {
         // Ignore restore errors.
       }
@@ -274,7 +279,7 @@ function MainScreen() {
               height: '100%',
               justifyContent: 'center',
               alignItems: 'center',
-              fontSize: '24px',
+              fontSize: '48px',
               textAlign: 'center',
               fontFamily: 'BoutiqueBitmap'
             }}>
@@ -293,8 +298,8 @@ function MainScreen() {
             background={Color.WhiteLight}
             zIndex={999}
           >
-            <div style={{ width: '120px' }}>
-              <TodoList showInput={false} />
+            <div style={{ width: '240px' }}>
+              <TodoList showInput={false} showRemove={false} />
             </div>
           </FreePixelWindow>
         )}

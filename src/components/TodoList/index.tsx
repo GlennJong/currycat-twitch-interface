@@ -10,9 +10,10 @@ interface Todo {
 
 type TodoListProps = {
   showInput?: boolean;
+  showRemove?: boolean;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
+const TodoList: React.FC<TodoListProps> = ({ showInput = true, showRemove = true }) => {
   const [todos, setTodos] = useState<Todo[] | null>(null);
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
   // 初始化時載入 localStorage
@@ -134,7 +135,7 @@ const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
           {todos.map(todo => (
             <li
               key={todo.id}
-              className={`todolist-item${todo.completed ? ' completed' : ''}`}
+              className={`todolist-item ${todo.completed ? ' completed' : ''}`}
             >
               <Checkbox
                 label=""
@@ -143,7 +144,9 @@ const TodoList: React.FC<TodoListProps> = ({ showInput = true }) => {
                 onChange={() => toggleTodo(todo.id)}
               />
               <span className="text">{todo.text}</span>
-              <span className="delete" onClick={() => deleteTodo(todo.id)}>x</span>
+              { showRemove &&
+                <span className="delete" onClick={() => deleteTodo(todo.id)}>x</span>
+              }
             </li>
           ))}
         </ul>

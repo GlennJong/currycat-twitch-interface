@@ -10,10 +10,8 @@ const TODO_OPEN_KEY = 'todo-open';
 const CAT_OPEN_KEY = 'cat-open';
 const STORAGE_MASK_KEY = 'currycat.background.mask';
 const DEFAULT_MASK = { x: 80, y: 120, width: 560, height: 540 };
-const SECTION_MARGIN_TOP_12: React.CSSProperties = { marginTop: 12 };
 const BG_ROW_STYLE: React.CSSProperties = { alignItems: 'center', gap: 8 };
 const FLEX_GROW_STYLE: React.CSSProperties = { flex: 1 };
-const USER_LABEL_STYLE: React.CSSProperties = { marginLeft: 12 };
 
 function postBanner(value: string) {
   try {
@@ -249,6 +247,7 @@ export default function DockApp() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const saveBackgroundByUrl = async (sourceUrl: string) => {
     try {
       const res = await fetch(sourceUrl);
@@ -262,6 +261,7 @@ export default function DockApp() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const saveBackgroundByFile = async (file: File) => {
     try {
       const sourceUrl = `file://${file.name}`;
@@ -285,6 +285,7 @@ export default function DockApp() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const applyBackgroundMode = async (mode: BackgroundMode) => {
     setBackgroundMode(mode);
     try {
@@ -386,34 +387,24 @@ export default function DockApp() {
 
   return (
     <div className="dock-app">
-      <h2 className="dock-title">CurryCat — OBS Dock</h2>
-      <p className="dock-desc">Use this dock to control the on-stream banner and timer.</p>
-
-      <div className="dock-controls">
-        <input
-          type="text"
-          className="dock-input"
-          value={bannerInput}
-          onChange={handleBannerInputChange}
-          placeholder="Banner text"
-        />
-        <button onClick={toggleBanner} className="small">
-          {banner ? 'Clear Banner' : 'Show Banner'}
-        </button>
-        <div className="dock-banner-preview">{banner || '<empty>'}</div>
-      </div>
-
-
       <div className="dock-section">
+        <div>Banner</div>
         <div className="dock-row">
-          <button className="small" onClick={triggerSyncChat}>Sync Chat Message</button>
-          <div style={USER_LABEL_STYLE}>
-            <span className="dock-note">Triggers MainScreen chat sync once per click</span>
-          </div>
+          <input
+            type="text"
+            className="dock-input"
+            value={bannerInput}
+            onChange={handleBannerInputChange}
+            placeholder="Banner text"
+          />
+          <button onClick={toggleBanner} className="small">
+            {banner ? 'Clear Banner' : 'Show Banner'}
+          </button>
         </div>
       </div>
 
       <div className="dock-section">
+        <div>Timer</div>
         <div className="dock-row">
           <label className="dock-label">Minutes</label>
           <input
@@ -427,11 +418,10 @@ export default function DockApp() {
       
           <button className="small" onClick={stopTimer}>Stop</button>
         </div>
-        <div className="dock-note">Start sets a countdown of the given minutes.</div>
       </div>
 
-      <div className="dock-section" style={SECTION_MARGIN_TOP_12}>
-        <div>Mask</div>
+      <div className="dock-section">
+        <div>Background</div>
         <div className="dock-row">
           <label className="dock-label">Background URL</label>
           <input
@@ -466,6 +456,10 @@ export default function DockApp() {
           <button className="small" onClick={handleSaveBackgroundClick}>Save Background</button>
           <button className="small" onClick={clearBackground}>Clear Background</button>
         </div>
+      </div>
+
+      <div className="dock-section">
+        <div>Mask</div>
         <div className="dock-row">
           <label className="dock-label">x</label>
           <input
@@ -512,13 +506,15 @@ export default function DockApp() {
           <button className="small" onClick={() => broadcastMask(DEFAULT_MASK)}>Create/Reset Mask</button>
         </div>
       </div>
-
-      <div className="dock-section" style={SECTION_MARGIN_TOP_12}>
-        
+      <div className="dock-section">
+        <div>Chatroom</div>
         <div className="dock-row">
-          <input type="checkbox" id="cat" checked={catOpen} onChange={(e) => setCatOpenState(e.currentTarget.checked)} />
-          <label htmlFor="cat" className="dock-note">{catOpen ? 'Cat: enabled' : 'Cat: disabled'}</label>
+          <button className="small" onClick={triggerSyncChat}>Sync Chat Message</button>
         </div>
+      </div>
+
+      <div className="dock-section">
+        <div>TODO List</div>
       
         <div className="dock-row">
           <input type="checkbox" id="todolist" checked={todoOpen} onChange={(e) => setTodoOpenState(e.currentTarget.checked)} />
@@ -545,6 +541,15 @@ export default function DockApp() {
             </div>
           ))}
         </div>
+      </div>
+      <div className="dock-section">
+        <div>Cat</div>
+        
+        <div className="dock-row">
+          <input type="checkbox" id="cat" checked={catOpen} onChange={(e) => setCatOpenState(e.currentTarget.checked)} />
+          <label htmlFor="cat" className="dock-note">{catOpen ? 'Cat: enabled' : 'Cat: disabled'}</label>
+        </div>
+      
       </div>
     </div>
   );

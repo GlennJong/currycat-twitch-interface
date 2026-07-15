@@ -20,7 +20,6 @@
 .todolist-list {
 	list-style: none;
 	margin: 0 -6px;
-	margin-top: 12px;
 }
 
 .todolist-ul {
@@ -31,6 +30,8 @@
 
 .todolist-item {
 	display: flex;
+	align-items: center;
+	margin-bottom: 6px;
 }
 
 .todolist-item.completed {
